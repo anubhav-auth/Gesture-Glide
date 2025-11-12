@@ -1,0 +1,53 @@
+
+gestureglide/
+├── README.md                          # Main project documentation
+├── SETUP.md                           # Installation and setup guide
+├── MAINTENANCE.md                     # Maintenance and troubleshooting
+├── UPGRADE.md                         # Upgrade and modification guide
+├── requirements.txt                   # Python dependencies
+├── config.yaml                        # Configuration file (user-editable)
+├── setup.py                           # Package setup for installation
+├── .gitignore                         # Git ignore rules
+│
+├── src/
+│   ├── __init__.py
+│   ├── main.py                        # Application entry point
+│   ├── config.py                      # Configuration management
+│   ├── hand_tracker.py                # MediaPipe Hands integration
+│   ├── cursor_controller.py           # Cursor movement and mapping
+│   ├── gesture_detector.py            # Gesture recognition state machine
+│   ├── smoothing.py                   # Kalman filter and smoothing
+│   ├── mouse_actions.py               # PyAutoGUI wrapper
+│   ├── calibration.py                 # Calibration utility
+│   └── utils.py                       # Utility functions
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_hand_tracker.py
+│   ├── test_cursor_controller.py
+│   ├── test_gesture_detector.py
+│   ├── test_smoothing.py
+│   ├── test_utils.py
+│   └── test_integration.py
+│
+├── docs/
+│   ├── ARCHITECTURE.md                # System architecture details
+│   ├── GESTURE_MAPPING.md             # Gesture definitions and mappings
+│   ├── PERFORMANCE_TUNING.md          # Performance optimization guide
+│   ├── TROUBLESHOOTING.md             # Common issues and solutions
+│   ├── API.md                         # API reference for developers
+│   └── CONTRIBUTING.md                # Contribution guidelines
+│
+├── data/
+│   ├── calibration_profile.json       # User calibration data
+│   └── gesture_profiles/              # Gesture-specific profiles
+│
+├── scripts/
+│   ├── calibrate.py                   # Standalone calibration tool
+│   ├── benchmark.py                   # Performance benchmarking
+│   ├── test_gestures.py               # Interactive gesture testing
+│   └── profile_performance.py         # CPU/Memory profiling
+│
+└── resources/
+    ├── sample_config.yaml             # Sample configuration
+    └── demo_video.mp4                 # Demo video (optional)

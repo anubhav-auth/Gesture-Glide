@@ -1,0 +1,158 @@
+# GestureGlide Configuration File
+# User-editable configuration for gesture control system
+
+# Hand Tracking Settings
+hand_tracking:
+  # Detection and tracking confidence thresholds (0.0-1.0)
+  # Lower values increase sensitivity but may increase false positives
+  detection_confidence: 0.7
+  tracking_confidence: 0.7
+  
+  # Model complexity: 0 (lite) or 1 (full)
+  # Lite is faster but less accurate; full is more accurate but slower
+  model_complexity: 0
+  
+  # Maximum number of hands to detect (1 or 2)
+  max_num_hands: 1
+
+# Cursor Control Settings
+cursor_control:
+  # Screen resolution (set automatically on startup, but can override)
+  screen_width: 1920
+  screen_height: 1080
+  
+  # Cursor smoothing filter type: "kalman" or "moving_average"
+  smoothing_filter: "kalman"
+  
+  # Kalman filter process and measurement noise
+  kalman_process_noise: 0.01
+  kalman_measurement_noise: 4.0
+  
+  # Moving average window size (for moving_average filter)
+  moving_average_window: 5
+  
+  # Cursor movement speed multiplier (0.5 = slower, 2.0 = faster)
+  speed_multiplier: 1.0
+  
+  # Enable prediction mode (experimental, reduces perceived latency)
+  use_prediction: false
+
+# Gesture Detection Settings
+gesture_detection:
+  # Pinch distance thresholds in centimeters
+  # These define when fingers are considered touching
+  
+  # Two-finger pinches (left click, right click, drag)
+  pinch_threshold_min: 2.0
+  pinch_threshold_max: 3.0
+  
+  # Three-finger pinch (middle click)
+  three_finger_pinch_min: 2.5
+  three_finger_pinch_max: 3.5
+  
+  # Debounce timings in milliseconds
+  click_debounce_ms: 100      # Minimum time between click events
+  drag_hold_threshold_ms: 200 # Time to hold before entering drag mode
+  drag_debounce_ms: 50        # Debounce during drag
+  
+  # Zoom gesture settings
+  zoom_distance_delta_cm: 1.5 # Minimum distance change to trigger zoom
+  zoom_debounce_ms: 50
+  
+  # Scroll gesture settings
+  scroll_distance_threshold_px: 50    # Minimum movement to trigger scroll
+  scroll_velocity_multiplier: 1.0      # How fast to scroll (higher = faster)
+  scroll_debounce_ms: 100
+  
+  # Gesture recognition hysteresis
+  # Helps prevent flickering between pinch and not-pinched
+  use_hysteresis: true
+  hysteresis_margin: 0.5
+
+# Performance Settings
+performance:
+  # Video capture and processing FPS
+  target_fps: 30
+  
+  # Enable GPU acceleration (requires CUDA-capable GPU)
+  use_gpu: false
+  
+  # Multi-threading: separate capture, process, display threads
+  enable_multithreading: true
+  
+  # Reduce processing resolution for faster performance
+  # Set to 1.0 for full resolution, 0.5 for half resolution
+  processing_scale: 1.0
+  
+  # Frame skip: process every nth frame (1 = every frame, 2 = every other frame)
+  frame_skip: 1
+  
+  # Enable power saving mode (reduces FPS to 15, lower CPU usage)
+  power_saving_mode: false
+
+# Visual Feedback Settings
+visualization:
+  # Show hand skeleton overlay
+  show_hand_skeleton: true
+  
+  # Show landmark points
+  show_landmarks: true
+  
+  # Show gesture indicators (current detected gestures)
+  show_gesture_indicators: true
+  
+  # Show cursor position reference
+  show_cursor_position: false
+  
+  # Show performance metrics (FPS, latency)
+  show_performance_metrics: false
+  
+  # Overlay text color (BGR format)
+  text_color: [0, 255, 0]  # Green
+  
+  # Skeleton line color (BGR format)
+  skeleton_color: [255, 0, 0]  # Blue
+  
+  # Landmark point size (radius in pixels)
+  landmark_size: 4
+
+# Calibration Settings
+calibration:
+  # Auto-run calibration on first launch
+  auto_calibrate_on_first_launch: true
+  
+  # Save calibration profile
+  save_calibration: true
+  calibration_profile_path: "data/calibration_profile.json"
+  
+  # Calibration point count (more = more accurate but slower)
+  calibration_points: 9
+
+# System Settings
+system:
+  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: "INFO"
+  
+  # Log file path (empty = no file logging, only console)
+  log_file: "gestureglide.log"
+  
+  # Enable debug mode (more verbose logging, visual debugging)
+  debug_mode: false
+  
+  # Quit key (ESC key code)
+  quit_key: "esc"
+
+# Advanced Settings (not recommended to modify)
+advanced:
+  # Hand pose estimation backend
+  # Options: "tensorflow", "tensorflow_lite", "off"
+  pose_backend: "tensorflow_lite"
+  
+  # Maximum queue depth for frame processing
+  max_queue_depth: 30
+  
+  # Thread pool size (0 = auto-detect number of CPU cores)
+  thread_pool_size: 0
+  
+  # Enable experimental features
+  experimental_features: false

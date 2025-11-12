@@ -1,0 +1,36 @@
+# GestureGlide - Hand Gesture Recognition System
+# Core Dependencies
+
+# Computer Vision and MediaPipe
+opencv-python
+mediapipe
+numpy
+
+# Mouse Control
+pyautogui
+
+# Data Processing and Math
+scipy
+pandas
+
+# Configuration Management
+pyyaml
+
+# Performance and Profiling
+psutil
+
+# Testing
+pytest
+pytest-cov
+
+# Optional: GPU Support (uncomment if using CUDA)
+# tensorflow  # For GPU-accelerated inference
+
+# Optional: Development Tools
+black
+flake8
+mypy
+
+# Optional: Visualization and Debugging
+matplotlib
+Pillow
