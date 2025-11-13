@@ -2,15 +2,27 @@
 # CURSOR CONTROL
 # ============================================================================
 
+import logging
+import numpy as np
+from typing import Tuple, Optional
+
+from src.utils import get_screen_size
+from src.smoothing import KalmanFilter1D, MovingAverageFilter
+
+
 class CursorController:
     """Cursor position control and smoothing"""
     
-    def __init__(self, screen_width: int = None, screen_height: int = None,
+    def __init__(self, screen_width: Optional[int] = None, 
+                 screen_height: Optional[int] = None,
                  smoothing_filter: str = "kalman"):
         self.logger = logging.getLogger(__name__)
         
         if screen_width is None or screen_height is None:
-            screen_width, screen_height = get_screen_size()
+            screen_width_detected, screen_height_detected = get_screen_size()
+            screen_width = screen_width if screen_width is not None else screen_width_detected
+            screen_height = screen_height if screen_height is not None else screen_height_detected
+
         
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -22,7 +34,7 @@ class CursorController:
             self.filter_x = MovingAverageFilter()
             self.filter_y = MovingAverageFilter()
         
-        self.logger.info(f"CursorController initialized: {screen_width}x{screen_height}")
+        self.logger.info(f"CursorController initialized: {self.screen_width}x{self.screen_height}")
     
     def update_position(self, landmarks: np.ndarray) -> Tuple[int, int]:
         """Update cursor position from middle finger"""
