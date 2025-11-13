@@ -8,7 +8,9 @@ This script is single-threaded.
 import sys
 import os
 from pathlib import Path
+from typing import Optional
 import numpy as np
+import threading
 
 # Add project to path
 project_root = Path(__file__).parent.parent
@@ -21,9 +23,48 @@ from src.hand_tracker import HandTracker
 from src.cursor_controller import CursorController
 from src.gesture_detector import GestureDetector
 from src.mouse_actions import MouseActions
-from src.core_logic import GestureCoreLogic # <-- Import new logic class
+from src.core_logic import GestureCoreLogic 
 from src.utils import setup_logging, get_screen_size
 
+class WebcamStream:
+    """
+    A simple class to run cv2.VideoCapture in a dedicated thread.
+    This prevents stale frames from the camera buffer.
+    """
+    def __init__(self, src=0):
+        self.cap = cv2.VideoCapture(src)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        
+        self.ret, self.frame = self.cap.read()
+        self.running = False
+        self.lock = threading.Lock()
+        
+    def start(self):
+        self.running = True
+        self.thread = threading.Thread(target=self._update, daemon=True)
+        self.thread.start()
+        return self
+        
+    def _update(self):
+        while self.running:
+            ret, frame = self.cap.read()
+            if ret:
+                with self.lock:
+                    self.frame = frame
+    
+    def read(self) -> Optional[np.ndarray]:
+        with self.lock:
+            if self.frame is None:
+                return None
+            return self.frame.copy()
+            
+    def stop(self):
+        self.running = False
+        if self.thread.is_alive():
+            self.thread.join(timeout=1)
+        self.cap.release()
 
 def main():
     """Quick start application"""
