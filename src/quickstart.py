@@ -3,6 +3,16 @@
 GestureGlide - Quick Start Script
 Simplified entry point for immediate testing.
 This script is single-threaded.
+
+*** PERFORMANCE WARNING ***
+Because this script is single-threaded and runs all logic sequentially,
+it may experience significant lag or jitter. Mouse actions (like moving
+or clicking) can block the main loop, preventing the next camera frame
+from being processed.
+
+For a smooth, low-latency experience, please run the full
+multi-threaded application:
+    python main.py
 """
 
 import sys
