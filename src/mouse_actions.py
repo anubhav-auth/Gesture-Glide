@@ -2,6 +2,9 @@
 # MOUSE ACTIONS
 # ============================================================================
 
+import logging
+import pyautogui
+
 class MouseActions:
     """Mouse event injection"""
     
