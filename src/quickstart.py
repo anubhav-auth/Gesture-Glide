@@ -71,11 +71,7 @@ def main():
             screen_height=config.cursor_control['screen_height'],
             smoothing_filter=config.cursor_control['smoothing_filter']
         )
-        gesture_detector = GestureDetector(
-            pinch_threshold_min=config.gesture_detection['pinch_threshold_min'],
-            pinch_threshold_max=config.gesture_detection['pinch_threshold_max'],
-            click_debounce_ms=config.gesture_detection['click_debounce_ms']
-        )
+        gesture_detector = GestureDetector(config.gesture_detection)
         mouse_actions = MouseActions()
         
         print("✓ All components initialized")
