@@ -98,52 +98,65 @@ def main():
             frame_count += 1
             
             # Detect hand landmarks
-            landmarks, handedness, confidence = hand_tracker.detect(frame)
+            detected_hands = hand_tracker.detect(frame)
             
             display_frame = frame.copy()
             
-            if landmarks is not None and confidence > config.hand_tracking['detection_confidence']:
-                # Update cursor
-                cursor_x, cursor_y = cursor_controller.update_position(landmarks)
-                
-                # Detect gesture
-                gesture = gesture_detector.detect(landmarks)
-                
-                # Execute action
-                if gesture is None or gesture == "CURSOR_MOVE":
-                    mouse_actions.move_cursor(cursor_x, cursor_y)
-                elif gesture == "LEFT_CLICK":
-                    mouse_actions.left_click()
-                    print(f"🖱️  Left Click")
-                elif gesture == "RIGHT_CLICK":
-                    mouse_actions.right_click()
-                    print(f"🖱️  Right Click")
-                elif gesture == "MIDDLE_CLICK":
-                    mouse_actions.middle_click()
-                    print(f"🖱️  Middle Click")
-                elif gesture == "DRAG_MOVE":
-                    mouse_actions.drag_to(cursor_x, cursor_y)
-                elif gesture == "ZOOM_IN":
-                    mouse_actions.scroll(5)
-                    print(f"🔍 Zoom In")
-                elif gesture == "ZOOM_OUT":
-                    mouse_actions.scroll(-5)
-                    print(f"🔍 Zoom Out")
-                
-                # Draw hand skeleton
-                display_frame = draw_hand_skeleton(display_frame, landmarks, config)
-                
-                # Draw gesture indicator
-                if gesture and config.visualization['show_gesture_indicators']:
-                    text = f"Gesture: {gesture}"
-                    cv2.putText(display_frame, text, (10, 30),
-                              cv2.FONT_HERSHEY_SIMPLEX, 1,
-                              tuple(config.visualization['text_color']), 2)
-                
-                # Draw cursor reference
-                if config.visualization['show_cursor_position']:
-                    cv2.circle(display_frame, (cursor_x % 640, cursor_y % 480), 
-                             5, (0, 255, 0), -1)
+            # Process the first hand that meets the confidence threshold
+            hand_processed = False
+            for landmarks, handedness, confidence in detected_hands:
+            
+                if not hand_processed and confidence > config.hand_tracking['detection_confidence']:
+                    hand_processed = True # Only process one hand
+                    
+                    # Update cursor
+                    cursor_x, cursor_y = cursor_controller.update_position(landmarks)
+                    
+                    # Detect gesture
+                    gesture = gesture_detector.detect(landmarks)
+                    
+                    # Execute action
+                    if gesture is None or gesture == "CURSOR_MOVE":
+                        mouse_actions.move_cursor(cursor_x, cursor_y)
+                    elif gesture == "LEFT_CLICK":
+                        mouse_actions.left_click()
+                        print(f"🖱️  Left Click")
+                    elif gesture == "RIGHT_CLICK":
+                        mouse_actions.right_click()
+                        print(f"🖱️  Right Click")
+                    elif gesture == "MIDDLE_CLICK":
+                        mouse_actions.middle_click()
+                        print(f"🖱️  Middle Click")
+                    elif gesture == "DRAG_MOVE":
+                        mouse_actions.drag_to(cursor_x, cursor_y)
+                    # Handle new gestures from Fix #1
+                    elif gesture == "DRAG_START":
+                        mouse_actions.start_drag(cursor_x, cursor_y)
+                        print(f"🖱️  Drag Start")
+                    elif gesture == "DRAG_END":
+                        mouse_actions.end_drag()
+                        print(f"🖱️  Drag End")
+                    elif gesture == "ZOOM_IN":
+                        mouse_actions.scroll(5)
+                        print(f"🔍 Zoom In")
+                    elif gesture == "ZOOM_OUT":
+                        mouse_actions.scroll(-5)
+                        print(f"🔍 Zoom Out")
+                    
+                    # Draw hand skeleton
+                    display_frame = draw_hand_skeleton(display_frame, landmarks, config)
+                    
+                    # Draw gesture indicator
+                    if gesture and config.visualization['show_gesture_indicators']:
+                        text = f"Gesture: {gesture}"
+                        cv2.putText(display_frame, text, (10, 30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                tuple(config.visualization['text_color']), 2)
+                    
+                    # Draw cursor reference
+                    if config.visualization['show_cursor_position']:
+                        cv2.circle(display_frame, (cursor_x % 640, cursor_y % 480), 
+                                5, (0, 255, 0), -1)
             
             # Show FPS
             if frame_count % 30 == 0 and config.visualization['show_performance_metrics']:
