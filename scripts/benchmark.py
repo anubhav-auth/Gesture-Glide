@@ -1,118 +1,105 @@
+# scripts/benchmark.py
 #!/usr/bin/env python3
-"""
-GestureGlide - Benchmark & Performance Tools
-"""
-
 import time
+import logging
+import sys
+
 import cv2
 import psutil
-import sys
-import logging
 
-# Setup basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class PerformanceBenchmark:
-    """Performance benchmarking tool"""
-    
-    def __init__(self):
+    def __init__(self) -> None:
         self.metrics = {
             "fps": 0.0,
-            "latency": 0.0,
-            "cpu_usage": 0.0,
-            "memory_usage": 0.0
+            "latency_ms": 0.0,
+            "cpu_percent": 0.0,
+            "mem_mb": 0.0,
         }
-    
-    def run_benchmark(self, duration_seconds: int = 60):
-        """Run performance benchmark"""
-        print("🚀 GestureGlide Performance Benchmark")
-        print("=" * 50)
-        print(f"Running for {duration_seconds} seconds...\n")
-        
-        frame_count = 0
-        total_frame_time = 0.0
-        start_time = time.time()
-        process = psutil.Process()
-        
+
+        # Optional hands processor using public API
+        self.hands_processor = None
+        try:
+            import mediapipe as mp  # noqa: F401
+            self._mp_hands = mp.solutions.hands  # type: ignore[attr-defined]
+            self.hands_processor = self._mp_hands.Hands(
+                static_image_mode=False,
+                max_num_hands=1,
+                min_detection_confidence=0.5,
+                min_tracking_confidence=0.5,
+                model_complexity=0,
+            )
+            logger.info("MediaPipe hands processor initialized")
+        except Exception:
+            self._mp_hands = None
+            self.hands_processor = None
+            logger.warning("mediapipe not available; benchmark will skip hand processing")
+
+    def run(self, duration_seconds: int = 30) -> None:
+        print("\nGestureGlide Performance Benchmark")
+        print("-" * 50)
+        print(f"Running for {duration_seconds} seconds...")
+
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
             logger.error("Failed to open webcam.")
             return
 
-        
-        while time.time() - start_time < duration_seconds:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            frame_time_start = time.time()
-            # Process frame (simplified)
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # Simulate some processing
-            _ = self.hands.process(rgb_frame) if hasattr(self, 'hands') else None 
-            frame_time = (time.time() - frame_time_start) * 1000
-            
-            total_frame_time += frame_time
-            frame_count += 1
-            
-            # Update metrics
+        process = psutil.Process()
+        start_time = time.time()
+        total_frame_time_ms = 0.0
+        frame_count = 0
+
+        try:
+            while time.time() - start_time < duration_seconds:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+
+                t0 = time.time()
+                # Optional processing
+                if self.hands_processor is not None:
+                    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    _ = self.hands_processor.process(rgb)
+                # Simulate minimum work if no processor available
+                total_frame_time_ms += (time.time() - t0) * 1000.0
+                frame_count += 1
+
             elapsed = time.time() - start_time
             if elapsed > 0:
                 self.metrics["fps"] = frame_count / elapsed
             if frame_count > 0:
-                self.metrics["latency"] = total_frame_time / frame_count
-            
-            self.metrics["cpu_usage"] = process.cpu_percent()
-            self.metrics["memory_usage"] = process.memory_info().rss / 1024 / 1024
-        
-        cap.release()
-        self._print_results()
-    
-    def _print_results(self):
-        """Print benchmark results"""
-        print("\n📊 Benchmark Results:")
-        print("-" * 50)
-        print(f"Average FPS:     {self.metrics['fps']:.1f}")
-        print(f"Latency:         {self.metrics['latency']:.1f} ms")
-        print(f"CPU Usage:       {self.metrics['cpu_usage']:.1f}%")
-        print(f"Memory Usage:    {self.metrics['memory_usage']:.1f} MB")
-        print("-" * 50)
-        
-        # Status indicators
-        status = []
-        if self.metrics['fps'] >= 25:
-            status.append("✓ FPS acceptable")
-        else:
-            status.append("✗ FPS low")
-        
-        if self.metrics['latency'] < 100:
-            status.append("✓ Latency good")
-        else:
-            status.append("✗ Latency high")
-        
-        if self.metrics['cpu_usage'] < 70:
-            status.append("✓ CPU usage acceptable")
-        else:
-            status.append("✗ CPU usage high")
-        
-        for s in status:
-            print(s)
+                self.metrics["latency_ms"] = total_frame_time_ms / frame_count
 
+            self.metrics["cpu_percent"] = process.cpu_percent(interval=0.1)
+            self.metrics["mem_mb"] = process.memory_info().rss / (1024 * 1024)
+        finally:
+            cap.release()
+            if self.hands_processor is not None:
+                self.hands_processor.close()
+
+        self._print_results()
+
+    def _print_results(self) -> None:
+        print("\nBenchmark Results")
+        print("-" * 50)
+        print(f"Average FPS        : {self.metrics['fps']:.1f}")
+        print(f"Avg frame latency  : {self.metrics['latency_ms']:.1f} ms")
+        print(f"CPU Usage          : {self.metrics['cpu_percent']:.1f}%")
+        print(f"Memory Usage       : {self.metrics['mem_mb']:.1f} MB")
+        print("-" * 50)
+
+def main() -> int:
+    duration = 30
+    if len(sys.argv) > 1:
+        try:
+            duration = int(sys.argv[1])
+        except ValueError:
+            logger.warning("Usage: python scripts/benchmark.py [duration_seconds]")
+    PerformanceBenchmark().run(duration_seconds=duration)
+    return 0
 
 if __name__ == "__main__":
-    # Simplified main guard
-    if len(sys.argv) > 1 and sys.argv[1] == "benchmark":
-        benchmark = PerformanceBenchmark()
-        # Add a mock 'hands' processor if not fully initialized
-        try:
-            import mediapipe as mp
-            benchmark.hands = mp.solutions.hands.Hands()
-        except ImportError:
-            logger.warning("mediapipe not found. Benchmark will be less accurate.")
-            benchmark.hands = None # type: ignore
-            
-        benchmark.run_benchmark()
-    else:
-        print("Usage: python scripts/benchmark.py benchmark")
+    sys.exit(main())
