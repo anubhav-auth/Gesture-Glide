@@ -6,6 +6,12 @@ import pytest
 import numpy as np
 import logging
 
+# Import dependencies needed by the module under test
+from src.smoothing import KalmanFilter1D, MovingAverageFilter
+# Fix import path
+from src.cursor_controller import CursorController
+
+
 # Mock fixtures for testing
 @pytest.fixture
 def sample_landmarks():
@@ -47,14 +53,12 @@ class TestCursorController:
     
     def test_cursor_controller_initialization(self):
         """Test CursorController initialization"""
-        from src_all_modules import CursorController
         cc = CursorController(screen_width=1920, screen_height=1080)
         assert cc.screen_width == 1920
         assert cc.screen_height == 1080
     
     def test_cursor_position_update(self, sample_landmarks):
         """Test cursor position update"""
-        from src_all_modules import CursorController
         cc = CursorController(screen_width=1920, screen_height=1080)
         
         # Middle finger is landmark 12
@@ -68,7 +72,6 @@ class TestCursorController:
     
     def test_cursor_position_clamping(self, sample_landmarks):
         """Test cursor position is clamped to screen"""
-        from src_all_modules import CursorController
         cc = CursorController(screen_width=1920, screen_height=1080)
         
         # Set middle finger outside bounds

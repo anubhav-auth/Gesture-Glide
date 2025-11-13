@@ -7,6 +7,15 @@ import pytest
 import numpy as np
 import logging
 
+# Import dependencies needed by the modules under test
+from src.smoothing import KalmanFilter1D, MovingAverageFilter
+from src.utils import euclidean_distance
+
+# Fix import paths
+from src.cursor_controller import CursorController
+from src.gesture_detector import GestureDetector
+
+
 # Mock fixtures for testing
 @pytest.fixture
 def sample_landmarks():
@@ -53,7 +62,6 @@ class TestIntegration:
     
     def test_full_pipeline(self, sample_landmarks):
         """Test full gesture recognition pipeline"""
-        from src_all_modules import CursorController, GestureDetector
         
         cc = CursorController(screen_width=1920, screen_height=1080)
         gd = GestureDetector()

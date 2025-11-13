@@ -6,11 +6,23 @@ import pytest
 import numpy as np
 import logging
 
+# Import dependencies needed by the module under test
+from src.utils import euclidean_distance
+# Fix import path
+from src.gesture_detector import GestureDetector
+
 # Mock fixtures for testing
 @pytest.fixture
 def sample_landmarks():
     """Generate sample hand landmarks"""
-    return np.random.rand(21, 3)
+    # Create a more structured array for predictable distances
+    landmarks = np.zeros((21, 3))
+    # Place landmarks far apart
+    landmarks[4] = np.array([0, 0, 0])  # Thumb
+    landmarks[8] = np.array([10, 10, 10])  # Index
+    landmarks[12] = np.array([20, 20, 20]) # Middle
+    landmarks[16] = np.array([30, 30, 30]) # Ring
+    return landmarks
 
 
 @pytest.fixture
@@ -47,19 +59,14 @@ class TestGestureDetector:
     
     def test_gesture_detector_initialization(self):
         """Test GestureDetector initialization"""
-        from src_all_modules import GestureDetector
         gd = GestureDetector()
         assert gd.pinch_threshold_min == 2.0
         assert gd.pinch_threshold_max == 3.0
     
     def test_no_gesture_detected(self, sample_landmarks):
         """Test no gesture when fingers apart"""
-        from src_all_modules import GestureDetector
         gd = GestureDetector()
         
-        # Set fingers far apart
-        sample_landmarks[4] = np.array([0, 0, 0])  # Thumb
-        sample_landmarks[8] = np.array([1, 1, 1])  # Index
-        
+        # Landmarks are already far apart from the fixture
         gesture = gd.detect(sample_landmarks)
-        assert gesture is None or gesture == "CURSOR_MOVE"
+        assert gesture is None

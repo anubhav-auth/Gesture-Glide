@@ -5,6 +5,9 @@ import pytest
 import numpy as np
 import logging
 
+# Fix import path
+from src.smoothing import KalmanFilter1D, MovingAverageFilter
+
 # Mock fixtures for testing
 @pytest.fixture
 def sample_landmarks():
@@ -47,14 +50,12 @@ class TestSmoothingFilters:
     
     def test_kalman_filter_initialization(self):
         """Test Kalman filter initialization"""
-        from src_all_modules import KalmanFilter1D
         kf = KalmanFilter1D(process_noise=0.01, measurement_noise=4.0)
         assert kf.value is None
         assert kf.error == 1.0
     
     def test_kalman_filter_first_measurement(self):
         """Test first measurement pass-through"""
-        from src_all_modules import KalmanFilter1D
         kf = KalmanFilter1D()
         result = kf.filter(100.0)
         assert result == 100.0
@@ -62,9 +63,9 @@ class TestSmoothingFilters:
     
     def test_kalman_filter_convergence(self):
         """Test filter convergence"""
-        from src_all_modules import KalmanFilter1D
         kf = KalmanFilter1D(process_noise=0.01, measurement_noise=4.0)
         
+        result = 0.0 # Init
         # Feed consistent values
         for _ in range(10):
             result = kf.filter(50.0)
@@ -74,10 +75,8 @@ class TestSmoothingFilters:
     
     def test_moving_average_filter(self):
         """Test moving average filter"""
-        from src_all_modules import MovingAverageFilter
         maf = MovingAverageFilter(window_size=3)
         
         assert maf.filter(10.0) == 10.0
         assert maf.filter(20.0) == 15.0
         assert maf.filter(30.0) == 20.0
-

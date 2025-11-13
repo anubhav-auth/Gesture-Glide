@@ -5,6 +5,9 @@ import pytest
 import numpy as np
 import logging
 
+# Fix import path
+from src.utils import euclidean_distance
+
 # Mock fixtures for testing
 @pytest.fixture
 def sample_landmarks():
@@ -47,7 +50,6 @@ class TestUtils:
     
     def test_euclidean_distance(self):
         """Test distance calculation"""
-        from src_all_modules import euclidean_distance
         p1 = np.array([0, 0, 0])
         p2 = np.array([3, 4, 0])
         distance = euclidean_distance(p1, p2)
@@ -55,7 +57,6 @@ class TestUtils:
     
     def test_distance_same_points(self):
         """Test distance for identical points"""
-        from src_all_modules import euclidean_distance
         p1 = np.array([1, 2, 3])
         p2 = np.array([1, 2, 3])
         distance = euclidean_distance(p1, p2)
