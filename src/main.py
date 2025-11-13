@@ -18,7 +18,9 @@ from src.hand_tracker import HandTracker
 from src.cursor_controller import CursorController
 from src.gesture_detector import GestureDetector
 from src.mouse_actions import MouseActions
-from src.core_logic import GestureCoreLogic # <-- Import new logic class
+from src.core_logic import GestureCoreLogic 
+import time
+
 
 class GestureGlideApp:
     """Main application class orchestrating all components"""
@@ -77,6 +79,7 @@ class GestureGlideApp:
         # Thread control
         self.running = False
         self.threads = []
+        self.is_paused = False
         
         self.logger.info("GestureGlide application initialized")
     
@@ -159,6 +162,12 @@ class GestureGlideApp:
         
         try:
             while self.running:
+                # --- FIX 3.2: Check for pause state ---
+                if self.is_paused:
+                    time.sleep(0.1) # Sleep to avoid busy-waiting
+                    continue
+                # --- END FIX ---
+                
                 try:
                     # Get the action bundle
                     gesture, cursor_pos = self.action_queue.get(timeout=1)
@@ -194,6 +203,8 @@ class GestureGlideApp:
                     frame, gesture, landmarks, cursor_pos
                 )
                 
+                h, w, _ = display_frame.shape
+                
                 # Show performance metrics
                 if self.config.visualization['show_performance_metrics']:
                     fps_counter += 1
@@ -208,18 +219,37 @@ class GestureGlideApp:
                               (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 
                               tuple(self.config.visualization['text_color']), 1)
                 
+                # --- FIX 3.2: Show "PAUSED" overlay ---
+                if self.is_paused:
+                    text = "PAUSED (Press 'p' to resume)"
+                    text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
+                    text_x = (w - text_size[0]) // 2
+                    text_y = (h + text_size[1]) // 2
+                    
+                    cv2.rectangle(display_frame, (text_x - 10, text_y - text_size[1] - 10), (text_x + text_size[0] + 10, text_y + 10), (0, 0, 0), -1)
+                    cv2.putText(display_frame, text, (text_x, text_y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                # --- END FIX ---
+
                 cv2.imshow("GestureGlide", display_frame)
                 
-                # Check for quit key (ESC)
-                if cv2.waitKey(1) & 0xFF == 27:
+                # --- FIX 3.2: Add 'p' key to toggle pause ---
+                key = cv2.waitKey(1) & 0xFF
+                
+                if key == 27: # Check for quit key (ESC)
                     self.running = False
+                elif key == ord('p'): # Check for pause key
+                    self.is_paused = not self.is_paused
+                    self.logger.info(f"Gesture control PAUSED: {self.is_paused}")
+                # --- END FIX ---
                 
         except Exception as e:
             self.logger.error(f"Error in display thread: {e}", exc_info=True)
         finally:
             cv2.destroyAllWindows()
             self.logger.info("Display thread stopped")
-    
+            
+            
     def run(self):
         """Start the application"""
         self.logger.info("Starting GestureGlide")
