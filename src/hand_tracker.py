@@ -1,6 +1,6 @@
 # src/hand_tracker.py
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 
 import cv2
 import numpy as np
@@ -57,28 +57,34 @@ class HandTracker:
             min_tracking_confidence=tracking_confidence,
             model_complexity=model_complexity,
         )
-        self.logger.info("HandTracker initialized")
+        self.logger.info(f"HandTracker initialized (max_num_hands={max_num_hands})")
 
-    def detect(self, frame: np.ndarray) -> Tuple[Optional[np.ndarray], Optional[str], float]:
+    def detect(self, frame: np.ndarray) -> List[Tuple[np.ndarray, str, float]]:
         """
-        Detect a single hand and return:
+        Detect one or more hands and return a list of tuples:
         - landmarks: np.ndarray of shape (21, 3) in normalized image coordinates
         - handedness: "Left" or "Right"
         - confidence: score for the classified hand
         """
         if self._hands is None:
-            return None, None, 0.0
+            return []
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self._hands.process(rgb)
+        
+        detected_hands: List[Tuple[np.ndarray, str, float]] = []
+        
         if results.multi_hand_landmarks and results.multi_handedness:
-            lm_list = results.multi_hand_landmarks[0].landmark
-            landmarks = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
-            handedness = results.multi_handedness[0].classification[0].label
-            confidence = float(results.multi_handedness[0].classification[0].score)
-            return landmarks, handedness, confidence
+            for hand_landmarks, handedness_data in zip(
+                results.multi_hand_landmarks, results.multi_handedness
+            ):
+                lm_list = hand_landmarks.landmark
+                landmarks = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
+                handedness = handedness_data.classification[0].label
+                confidence = float(handedness_data.classification[0].score)
+                detected_hands.append((landmarks, handedness, confidence))
 
-        return None, None, 0.0
+        return detected_hands
 
     def close(self) -> None:
         if self._hands is not None:
