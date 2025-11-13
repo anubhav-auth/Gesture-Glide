@@ -59,10 +59,11 @@ class HandTracker:
         )
         self.logger.info(f"HandTracker initialized (max_num_hands={max_num_hands})")
 
-    def detect(self, frame: np.ndarray) -> List[Tuple[np.ndarray, str, float]]:
+    def detect(self, frame: np.ndarray) -> List[Tuple[np.ndarray, np.ndarray, str, float]]:
         """
         Detect one or more hands and return a list of tuples:
-        - landmarks: np.ndarray of shape (21, 3) in normalized image coordinates
+        - image_landmarks: np.ndarray of shape (21, 3) in normalized image coordinates
+        - world_landmarks: np.ndarray of shape (21, 3) in real-world meters
         - handedness: "Left" or "Right"
         - confidence: score for the classified hand
         """
@@ -72,20 +73,32 @@ class HandTracker:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self._hands.process(rgb)
         
-        detected_hands: List[Tuple[np.ndarray, str, float]] = []
+        # Updated list to hold the new tuple structure
+        detected_hands: List[Tuple[np.ndarray, np.ndarray, str, float]] = []
         
-        if results.multi_hand_landmarks and results.multi_handedness:
-            for hand_landmarks, handedness_data in zip(
-                results.multi_hand_landmarks, results.multi_handedness
+        # Ensure all required data is present
+        if results.multi_hand_landmarks and results.multi_handedness and results.multi_hand_world_landmarks:
+            for hand_landmarks, hand_world_landmarks, handedness_data in zip(
+                results.multi_hand_landmarks,
+                results.multi_hand_world_landmarks, # <-- Get world landmarks
+                results.multi_handedness
             ):
+                # 1. Image landmarks (for cursor/visualization)
                 lm_list = hand_landmarks.landmark
-                landmarks = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
+                image_landmarks = np.array([[lm.x, lm.y, lm.z] for lm in lm_list], dtype=np.float32)
+                
+                # 2. World landmarks (for gesture detection)
+                world_lm_list = hand_world_landmarks.landmark
+                world_landmarks = np.array([[lm.x, lm.y, lm.z] for lm in world_lm_list], dtype=np.float32)
+
+                # 3. Handedness and confidence
                 handedness = handedness_data.classification[0].label
                 confidence = float(handedness_data.classification[0].score)
-                detected_hands.append((landmarks, handedness, confidence))
+                
+                # Append both sets of landmarks
+                detected_hands.append((image_landmarks, world_landmarks, handedness, confidence))
 
         return detected_hands
-
     def close(self) -> None:
         if self._hands is not None:
             self._hands.close()
