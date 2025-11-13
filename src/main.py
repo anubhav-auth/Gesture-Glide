@@ -10,6 +10,7 @@ import logging
 import sys
 import numpy as np
 from pathlib import Path
+from typing import Optional, Tuple
 
 from src.config import Config
 from src.utils import setup_logging
@@ -17,16 +18,24 @@ from src.hand_tracker import HandTracker
 from src.cursor_controller import CursorController
 from src.gesture_detector import GestureDetector
 from src.mouse_actions import MouseActions
+from src.core_logic import GestureCoreLogic # <-- Import new logic class
 
 class GestureGlideApp:
     """Main application class orchestrating all components"""
     
-    def __init__(self, config_path: str = "../config.yaml"):
+    def __init__(self, config_path: str = "config.yaml"):
         """Initialize GestureGlide application
         
         Args:
             config_path: Path to configuration file
         """
+        if not Path(config_path).exists():
+            if Path("../config.yaml").exists():
+                config_path = "../config.yaml"
+            else:
+                logging.error(f"Config file not found: {config_path}")
+                sys.exit(1)
+
         self.config = Config(config_path)
         setup_logging(
             log_level=self.config.system.get('log_level', 'INFO'),
@@ -36,27 +45,30 @@ class GestureGlideApp:
         self.logger = logging.getLogger(__name__)
         
         # Initialize components
-        self.hand_tracker = HandTracker(self.config)  # This one already handles Config objects
+        self.hand_tracker = HandTracker(self.config)
         self.cursor_controller = CursorController(
             screen_width=self.config.cursor_control.get('screen_width'),
             screen_height=self.config.cursor_control.get('screen_height'),
             smoothing_filter=self.config.cursor_control.get('smoothing_filter', 'kalman')
         )
-        self.gesture_detector = GestureDetector(self.config.gesture_detection)
-        self.mouse_actions = MouseActions()  # Takes no parameters
-
+        self.gesture_detector = GestureDetector(self.config.gesture_detection) # Use Fix #1
+        self.mouse_actions = MouseActions()
+        
+        # Initialize the core logic handler
+        self.core_logic = GestureCoreLogic(
+            self.config, self.hand_tracker, self.cursor_controller, 
+            self.gesture_detector, self.mouse_actions
+        )
         
         # Communication queues
-        self.frame_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
-        self.gesture_queue = queue.Queue(maxsize=100)
+        # process_queue: Holds raw frames for the process_thread
+        self.process_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
+        # display_queue: Holds processed (frame, gesture, landmarks) for display_thread
+        self.display_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
         
         # Thread control
         self.running = False
         self.threads = []
-        
-        # Performance metrics
-        self.frame_count = 0
-        self.fps_counter = 0
         
         self.logger.info("GestureGlide application initialized")
     
@@ -70,7 +82,6 @@ class GestureGlideApp:
             self.running = False
             return
         
-        # Set camera resolution
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         cap.set(cv2.CAP_PROP_FPS, 30)
@@ -90,9 +101,10 @@ class GestureGlideApp:
                 frame_skip_counter = 0
                 
                 try:
-                    self.frame_queue.put(frame, block=False)
+                    # Put raw frame into the processing queue
+                    self.process_queue.put(frame, block=True, timeout=1)
                 except queue.Full:
-                    pass  # Drop oldest frame if queue full
+                    pass  # Drop frame if process queue is full
                     
         finally:
             cap.release()
@@ -105,62 +117,22 @@ class GestureGlideApp:
         try:
             while self.running:
                 try:
-                    frame = self.frame_queue.get(timeout=1)
+                    frame = self.process_queue.get(timeout=1)
                 except queue.Empty:
                     continue
                 
-                # Detect hand landmarks
-                detected_hands = self.hand_tracker.detect(frame)
+                # Use core logic to process frame and execute actions
+                gesture, landmarks, cursor_pos = self.core_logic.process_frame(frame)
                 
-                # Process the first hand that meets the confidence threshold
-                # (True multi-hand gestures would require more logic)
-                hand_processed = False
-                for landmarks, handedness, confidence in detected_hands:
-                
-                    if not hand_processed and confidence > self.config.hand_tracking['detection_confidence']:
-                        hand_processed = True # Only process one hand for cursor control
-
-                        # Update cursor position based on middle finger
-                        cursor_x, cursor_y = self.cursor_controller.update_position(landmarks)
-                        
-                        # Detect gestures
-                        gesture = self.gesture_detector.detect(landmarks)
-                        
-                        # Update cursor on screen
-                        if gesture is None or gesture == "CURSOR_MOVE":
-                            self.mouse_actions.move_cursor(cursor_x, cursor_y)
-                        
-                        # Process gesture-specific actions
-                        if gesture == "LEFT_CLICK":
-                            self.mouse_actions.left_click()
-                        elif gesture == "RIGHT_CLICK":
-                            self.mouse_actions.right_click()
-                        elif gesture == "MIDDLE_CLICK":
-                            self.mouse_actions.middle_click()
-                        elif gesture == "DRAG_START":
-                            self.mouse_actions.start_drag(cursor_x, cursor_y)
-                        elif gesture == "DRAG_MOVE":
-                            self.mouse_actions.drag_to(cursor_x, cursor_y)
-                        elif gesture == "DRAG_END":
-                            self.mouse_actions.end_drag()
-                        elif gesture == "ZOOM_IN":
-                            self.mouse_actions.scroll(5)  # Scroll up
-                        elif gesture == "ZOOM_OUT":
-                            self.mouse_actions.scroll(-5)  # Scroll down
-                        elif gesture == "SCROLL_UP":
-                            self.mouse_actions.scroll(3)
-                        elif gesture == "SCROLL_DOWN":
-                            self.mouse_actions.scroll(-3)
-                        
-                        try:
-                            self.gesture_queue.put(gesture, block=False)
-                        except queue.Full:
-                            pass
-                
-                self.frame_count += 1
+                # Put the original frame + processed data into the display queue
+                try:
+                    display_bundle = (frame, gesture, landmarks, cursor_pos)
+                    self.display_queue.put(display_bundle, block=False)
+                except queue.Full:
+                    pass # Drop display frame if display is lagging
                 
         except Exception as e:
-            self.logger.error(f"Error in process thread: {e}")
+            self.logger.error(f"Error in process thread: {e}", exc_info=True)
         finally:
             self.logger.info("Process thread stopped")
     
@@ -168,33 +140,33 @@ class GestureGlideApp:
         """Display video with overlay visualization"""
         self.logger.info("Display thread started")
         
+        fps_counter = 0
+        last_time = cv2.getTickCount()
+        
         try:
             while self.running:
                 try:
-                    frame = self.frame_queue.get(timeout=1)
+                    # Get the bundled frame and metadata
+                    frame, gesture, landmarks, cursor_pos = self.display_queue.get(timeout=1)
                 except queue.Empty:
                     continue
                 
-                # Display frame with hand skeleton overlay
-                display_frame = frame.copy()
-                
-                # Get current gesture from queue
-                current_gesture = None
-                try:
-                    current_gesture = self.gesture_queue.get_nowait()
-                except queue.Empty:
-                    pass
-                
-                # Draw gesture indicator
-                if self.config.visualization['show_gesture_indicators'] and current_gesture:
-                    cv2.putText(display_frame, f"Gesture: {current_gesture}", 
-                              (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
-                              tuple(self.config.visualization['text_color']), 2)
+                # Use core logic to draw visualizations
+                display_frame = self.core_logic.draw_visualizations(
+                    frame, gesture, landmarks, cursor_pos
+                )
                 
                 # Show performance metrics
                 if self.config.visualization['show_performance_metrics']:
-                    fps = cv2.getTickFrequency() / (cv2.getTickCount() - self.fps_counter)
-                    cv2.putText(display_frame, f"FPS: {fps:.1f}", 
+                    fps_counter += 1
+                    if (cv2.getTickCount() - last_time) / cv2.getTickFrequency() > 1.0:
+                        fps = fps_counter
+                        fps_counter = 0
+                        last_time = cv2.getTickCount()
+                    else:
+                        fps = fps_counter # Show running count
+                        
+                    cv2.putText(display_frame, f"FPS: {fps}", 
                               (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 
                               tuple(self.config.visualization['text_color']), 1)
                 
@@ -205,7 +177,7 @@ class GestureGlideApp:
                     self.running = False
                 
         except Exception as e:
-            self.logger.error(f"Error in display thread: {e}")
+            self.logger.error(f"Error in display thread: {e}", exc_info=True)
         finally:
             cv2.destroyAllWindows()
             self.logger.info("Display thread stopped")
@@ -216,105 +188,59 @@ class GestureGlideApp:
         self.running = True
         
         try:
-            # Create and start threads
             if self.config.performance['enable_multithreading']:
                 capture = threading.Thread(target=self.capture_thread, daemon=True)
                 process = threading.Thread(target=self.process_thread, daemon=True)
-                display = threading.Thread(target=self.display_thread, daemon=True)
+                display = threading.Thread(target=self.display_thread) # Display must be non-daemon
+                
+                self.threads = [capture, process, display]
                 
                 capture.start()
                 process.start()
                 display.start()
                 
-                self.threads = [capture, process, display]
+                # Wait for the display thread to finish (it exits on ESC)
+                display.join()
                 
-                # Wait for threads
-                for thread in self.threads:
-                    thread.join()
             else:
-                # Single-threaded mode
-                self.logger.warning("Running in single-threaded mode (not recommended)")
-                self.run_single_threaded()
+                self.logger.warning("Running in single-threaded mode (use quickstart.py)")
+                # Fallback to single-threaded logic (now in quickstart)
+                self.run_single_threaded_fallback()
         
         except KeyboardInterrupt:
             self.logger.info("Keyboard interrupt received")
-        except Exception as e:
-            self.logger.error(f"Error in main loop: {e}")
         finally:
             self.running = False
+            # Wait for daemon threads to exit
+            for thread in self.threads:
+                if thread.is_alive() and thread.daemon:
+                    thread.join(timeout=1)
             self.logger.info("GestureGlide stopped")
     
-    def run_single_threaded(self):
-        """Single-threaded execution (fallback mode)"""
+    def run_single_threaded_fallback(self):
+        """Fallback for single-threaded mode (quickstart.py is preferred)"""
         cap = cv2.VideoCapture(0)
-        
         while self.running and cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
             
-            # Detect hand landmarks
-            detected_hands = self.hand_tracker.detect(frame)
+            gesture, landmarks, cursor_pos = self.core_logic.process_frame(frame)
+            display_frame = self.core_logic.draw_visualizations(
+                frame.copy(), gesture, landmarks, cursor_pos
+            )
             
-            # Process the first hand that meets the confidence threshold
-            hand_processed = False
-            for landmarks, handedness, confidence in detected_hands:
-            
-                if not hand_processed and confidence > self.config.hand_tracking['detection_confidence']:
-                    hand_processed = True # Only process one hand for cursor control
-
-                    # Update cursor position based on middle finger
-                    # This call is now correct: landmarks is np.ndarray
-                    cursor_x, cursor_y = self.cursor_controller.update_position(landmarks)
-                    
-                    # Detect gestures
-                    # This call is also correct: landmarks is np.ndarray
-                    gesture = self.gesture_detector.detect(landmarks)
-                    
-                    # Update cursor on screen
-                    if gesture is None or gesture == "CURSOR_MOVE":
-                        self.mouse_actions.move_cursor(cursor_x, cursor_y)
-                    
-                    # Process gesture-specific actions
-                    if gesture == "LEFT_CLICK":
-                        self.mouse_actions.left_click()
-                    elif gesture == "RIGHT_CLICK":
-                        self.mouse_actions.right_click()
-                    elif gesture == "MIDDLE_click":
-                        self.mouse_actions.middle_click()
-                    elif gesture == "DRAG_START":
-                        self.mouse_actions.start_drag(cursor_x, cursor_y)
-                    elif gesture == "DRAG_MOVE":
-                        self.mouse_actions.drag_to(cursor_x, cursor_y)
-                    elif gesture == "DRAG_END":
-                        self.mouse_actions.end_drag()
-                    elif gesture == "ZOOM_IN":
-                        self.mouse_actions.scroll(5)  # Scroll up
-                    elif gesture == "ZOOM_OUT":
-                        self.mouse_actions.scroll(-5)  # Scroll down
-                    elif gesture == "SCROLL_UP":
-                        self.mouse_actions.scroll(3)
-                    elif gesture == "SCROLL_DOWN":
-                        self.mouse_actions.scroll(-3)
-                    
-                    try:
-                        self.gesture_queue.put(gesture, block=False)
-                    except queue.Full:
-                        pass
-            
-            cv2.imshow("GestureGlide", frame)
+            cv2.imshow("GestureGlide (Single-Threaded)", display_frame)
             if cv2.waitKey(1) & 0xFF == 27:
-                break
+                self.running = False
         
         cap.release()
         cv2.destroyAllWindows()
-
 
 def main():
     """Application entry point"""
     app = GestureGlideApp("config.yaml")
     app.run()
-
 
 if __name__ == "__main__":
     main()
