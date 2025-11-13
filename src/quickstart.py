@@ -7,7 +7,7 @@ Simplified entry point for immediate testing
 import sys
 import os
 from pathlib import Path
-import numpy as np # <-- ADDED
+import numpy as np
 
 # Add project to path
 project_root = Path(__file__).parent.parent # <-- Corrected path to project root
@@ -64,12 +64,8 @@ def main():
         print(f"✓ Screen size: {get_screen_size()}")
         
         # Initialize components, passing config object
-        hand_tracker = HandTracker(
-            detection_confidence=config.hand_tracking['detection_confidence'],
-            tracking_confidence=config.hand_tracking['tracking_confidence'],
-            model_complexity=config.hand_tracking['model_complexity'],
-            max_num_hands=config.hand_tracking['max_num_hands']
-        )
+        hand_tracker = HandTracker(config)
+
         cursor_controller = CursorController(
             screen_width=config.cursor_control['screen_width'],
             screen_height=config.cursor_control['screen_height'],
