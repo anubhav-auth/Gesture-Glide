@@ -1,20 +1,10 @@
-# Computer Vision and MediaPipe
 opencv-python==4.8.1.78
-mediapipe==0.10.8
-numpy==1.24.3
+mediapipe==0.10.20
+numpy==1.26.4
 
-# Mouse Control
 pyautogui==0.9.53
-
-# Configuration Management
 pyyaml==6.0.1
 
-# Data Processing and Math
-scipy
-pandas
-
-# Performance and Profiling
+scipy==1.14.0
+pandas==2.2.2
 psutil
-
-# Optional: GPU Support (uncomment if using CUDA)
-# tensorflow  # For GPU-accelerated inference
