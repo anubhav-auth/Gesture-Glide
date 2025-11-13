@@ -1,0 +1,12 @@
+# Testing
+pytest
+pytest-cov
+
+# Development Tools
+black
+flake8
+mypy
+
+# Optional: Visualization and Debugging
+matplotlib
+Pillow
