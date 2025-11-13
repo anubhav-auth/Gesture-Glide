@@ -42,6 +42,7 @@ class GestureDetector:
         # Use a real-world Y-delta (in meters) for scrolling
         # 0.03 meters (3cm) is a reasonable default for a swipe.
         self.scroll_delta_y = 0.03
+        self.scroll_delta_x = 0.03
 
         # State machine
         self.gesture_timers: dict[str, float] = {}
@@ -54,6 +55,7 @@ class GestureDetector:
         # Last known distances for delta calculations
         self.last_zoom_dist = 0.0
         self.last_scroll_y = 0.0
+        self.last_scroll_x = 0.0
 
         self.logger.info(f"GestureDetector initialized (Real-world Pinch Thresh: {self.pinch_thresh:.4f}m)")
         
@@ -87,8 +89,9 @@ class GestureDetector:
             middle_ring_dist < self.three_finger_pinch_thresh
         )
 
-        # For 2-finger scroll, get average Y position
+        # For 2-finger scroll, get average X and Y position
         current_scroll_y = (index_tip[1] + middle_tip[1]) / 2.0
+        current_scroll_x = (index_tip[0] + middle_tip[0]) / 2.0  # <-- ADDED
         
         current_time_ms = time.time() * 1000
         gesture: Optional[str] = None
@@ -147,14 +150,19 @@ class GestureDetector:
                     if self._is_ready("LEFT_CLICK", self.click_debounce_ms):
                         gesture = "LEFT_CLICK"
             
-            # --- Scroll (Vertical 2-Finger Swipe) ---
+            # --- Scroll (Vertical/Horizontal 2-Finger Swipe) ---  <-- MODIFIED BLOCK
             else:
                 # Only check for scroll if no other pinch is active
                 if self.last_landmarks is not None:
                     scroll_y_delta = current_scroll_y - self.last_scroll_y
+                    scroll_x_delta = current_scroll_x - self.last_scroll_x
                     
+                    # Prioritize vertical scroll
                     if abs(scroll_y_delta) > self.scroll_delta_y and self._is_ready("SCROLL", self.scroll_debounce_ms):
                         gesture = "SCROLL_DOWN" if scroll_y_delta > 0 else "SCROLL_UP"
+                    # Else, check for horizontal scroll
+                    elif abs(scroll_x_delta) > self.scroll_delta_x and self._is_ready("SCROLL", self.scroll_debounce_ms):
+                        gesture = "SCROLL_RIGHT" if scroll_x_delta > 0 else "SCROLL_LEFT"
                 
         # Update "last known" values for next frame's delta calculation
         if not is_drag_pinch:
@@ -162,6 +170,7 @@ class GestureDetector:
             self.last_zoom_dist = thumb_index_dist
        
         self.last_scroll_y = current_scroll_y
+        self.last_scroll_x = current_scroll_x  # <-- ADDED
         self.last_landmarks = landmarks
         
         return gesture
