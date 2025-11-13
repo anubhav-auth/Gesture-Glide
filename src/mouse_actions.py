@@ -53,3 +53,8 @@ class MouseActions:
         """Scroll (positive=up, negative=down)"""
         pyautogui.scroll(delta)
         self.logger.debug(f"Scroll: {delta}")
+        
+    def hscroll(self, delta: int):
+        """Scroll horizontally (positive=right, negative=left)"""
+        pyautogui.hscroll(delta)
+        self.logger.debug(f"HScroll: {delta}")
