@@ -75,22 +75,26 @@ class GestureCoreLogic:
         
         # Process the first hand that meets the confidence threshold
         hand_processed = False
-        for landmarks, handedness, confidence in detected_hands:
+        # Unpack the new tuple from hand_tracker
+        for image_landmarks, world_landmarks, handedness, confidence in detected_hands:
             if not hand_processed and confidence > self.config.hand_tracking['detection_confidence']:
                 hand_processed = True
 
-                cursor_x, cursor_y = self.cursor_controller.update_position(landmarks)
-                gesture = self.gesture_detector.detect(landmarks)
+                # 1. Cursor uses 2D image landmarks
+                cursor_x, cursor_y = self.cursor_controller.update_position(image_landmarks)
+                
+                # 2. Gesture detection uses 3D world landmarks
+                gesture = self.gesture_detector.detect(world_landmarks)
                 
                 self._execute_actions(gesture, cursor_x, cursor_y)
 
                 # Store outputs for visualization
                 gesture_out = gesture
-                landmarks_out = landmarks
+                landmarks_out = image_landmarks # <-- Pass image landmarks for drawing
                 cursor_pos_out = (cursor_x, cursor_y)
 
         return gesture_out, landmarks_out, cursor_pos_out
-
+    
     def draw_visualizations(
         self, 
         frame: np.ndarray, 
