@@ -94,9 +94,16 @@ def main():
         
         # Initialize components
         hand_tracker = HandTracker(config)
+
+        # --- FIX 3.1: Handle null screen resolution ---
+        # Get values from config. They might be 'null' (None).
+        conf_screen_width = config.cursor_control.get('screen_width')
+        conf_screen_height = config.cursor_control.get('screen_height')
+
         cursor_controller = CursorController(
-            screen_width=config.cursor_control['screen_width'],
-            screen_height=config.cursor_control['screen_height'],
+            # Pass None to trigger auto-detection in the controller
+            screen_width=conf_screen_width,
+            screen_height=conf_screen_height,
             smoothing_filter=config.cursor_control['smoothing_filter']
         )
         gesture_detector = GestureDetector(config.gesture_detection) # Use Fix #1
