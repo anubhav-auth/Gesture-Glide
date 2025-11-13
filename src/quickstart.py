@@ -189,15 +189,9 @@ def main():
             elif key == ord('p'): # Check for pause key
                 is_paused = not is_paused
                 print(f"\nGesture control PAUSED: {is_paused}")
-            # --- END FIX ---
-        
-        # --- FIX: This now works, as 'cap' is a WebcamStream object ---
+                
         cap.stop()
-        # --- END FIX ---
-        
-        # --- REMOVE THIS LINE ---
-        # cap.release() 
-        # --- END REMOVE ---
+
 
         cv2.destroyAllWindows()
         print("👋 GestureGlide stopped")
