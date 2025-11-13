@@ -18,8 +18,8 @@ hand_tracking:
 # Cursor Control Settings
 cursor_control:
   # Screen resolution (set automatically on startup, but can override)
-  screen_width: 1920
-  screen_height: 1080
+  screen_width: null
+  screen_height: null
   
   # Cursor smoothing filter type: "kalman" or "moving_average"
   smoothing_filter: "kalman"
