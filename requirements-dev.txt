@@ -10,3 +10,8 @@ mypy
 # Optional: Visualization and Debugging
 matplotlib
 Pillow
+
+# Benchmarking & Analysis (Moved from requirements.txt)
+scipy==1.14.0
+pandas==2.2.2
+psutil
