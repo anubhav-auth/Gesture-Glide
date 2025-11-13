@@ -6,57 +6,167 @@ import time
 import logging
 import numpy as np
 from collections import deque
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from src.utils import euclidean_distance
 
 
 class GestureDetector:
     """Gesture recognition state machine"""
-    
-    def __init__(self, pinch_threshold_min: float = 2.0,
-                 pinch_threshold_max: float = 3.0,
-                 click_debounce_ms: int = 100):
+
+    def __init__(self, config: Dict[str, Any]):
+        """
+        Initialize the gesture detector with configuration.
+        
+        Args:
+            config: The 'gesture_detection' section of the config.yaml file.
+        """
         self.logger = logging.getLogger(__name__)
+
+        # --- Problem: Config thresholds are in 'cm', but landmarks are 'normalized' (0.0-1.0) ---
+        # The values in config.yaml (e.g., 2.0) are too large for normalized data.
+        # We apply a scaling factor to convert "cm" to "normalized" distance.
+        # This is a rough estimate and should be tuned, or hand_tracker.py should
+        # be updated to use 'multi_hand_world_landmarks' (which are in meters).
+        # Assuming a detection box of ~40cm, 2.0cm is 2.0/40.0 = 0.05 normalized.
+        self.SCALE_FACTOR = 1.0 / 40.0  # (1.0 normalized width = ~40cm)
+
+        # Load thresholds and apply scaling
+        self.pinch_thresh = config.get('pinch_threshold_min', 2.0) * self.SCALE_FACTOR
+        self.three_finger_pinch_thresh = config.get('three_finger_pinch_min', 2.5) * self.SCALE_FACTOR
         
-        self.pinch_threshold_min = pinch_threshold_min
-        self.pinch_threshold_max = pinch_threshold_max
-        self.click_debounce_ms = click_debounce_ms
+        # Load timings
+        self.click_debounce_ms = config.get('click_debounce_ms', 100)
+        self.drag_hold_ms = config.get('drag_hold_threshold_ms', 200)
+        self.zoom_debounce_ms = config.get('zoom_debounce_ms', 50)
+        self.scroll_debounce_ms = config.get('scroll_debounce_ms', 100)
+
+        # Load deltas and apply scaling
+        self.zoom_delta = config.get('zoom_distance_delta_cm', 1.5) * self.SCALE_FACTOR
         
+        # 'scroll_distance_threshold_px' from config is hard to use with normalized coords.
+        # Using a sane, normalized default Y-delta to trigger scroll.
+        self.scroll_delta_y = 0.03 # ~3% of screen height move
+
+        # State machine
         self.gesture_timers: dict[str, float] = {}
         self.last_landmarks: Optional[np.ndarray] = None
-        self.pinch_history: deque = deque(maxlen=10)
-    
+        
+        # Drag state: "RELEASED" -> "HELD" (pinch down) -> "DRAGGING"
+        self.drag_state = "RELEASED" 
+        self.drag_start_time = 0.0
+        
+        # Last known distances for delta calculations
+        self.last_zoom_dist = 0.0
+        self.last_scroll_y = 0.0
+
+        self.logger.info(f"GestureDetector initialized (Normalized Pinch Thresh: {self.pinch_thresh:.4f})")
+
+    def _is_ready(self, gesture: str, debounce_ms: int) -> bool:
+        """Check if debounce time has passed for a gesture"""
+        current_time_ms = time.time() * 1000
+        last_time = self.gesture_timers.get(gesture, 0)
+        if (current_time_ms - last_time) > debounce_ms:
+            self.gesture_timers[gesture] = current_time_ms
+            return True
+        return False
+
     def detect(self, landmarks: np.ndarray) -> Optional[str]:
         """Detect gesture from landmarks"""
         
-        thumb_index_dist = euclidean_distance(landmarks[4], landmarks[8])
-        index_middle_dist = euclidean_distance(landmarks[8], landmarks[12])
-        middle_ring_dist = euclidean_distance(landmarks[12], landmarks[16])
+        # --- Calculate Distances ---
+        # (Landmark indices from MediaPipe)
+        thumb_tip = landmarks[4]
+        index_tip = landmarks[8]
+        middle_tip = landmarks[12]
+        ring_tip = landmarks[16]
+
+        # Distances for gestures
+        thumb_index_dist = euclidean_distance(thumb_tip, index_tip)
+        index_middle_dist = euclidean_distance(index_tip, middle_tip)
+        middle_ring_dist = euclidean_distance(middle_tip, ring_tip)
         
+        # For 3-finger pinch, check both pairs
+        all_three_pinch = (
+            index_middle_dist < self.three_finger_pinch_thresh and
+            middle_ring_dist < self.three_finger_pinch_thresh
+        )
+
+        # For 2-finger scroll, get average Y position
+        current_scroll_y = (index_tip[1] + middle_tip[1]) / 2.0
+        
+        current_time_ms = time.time() * 1000
         gesture: Optional[str] = None
+
+        # --- State Machine & Gesture Logic ---
+
+        # 1. Check for Drag state (Thumb + Index)
+        is_drag_pinch = thumb_index_dist < self.pinch_thresh
         
-        # Check pinch gestures
-        if index_middle_dist < self.pinch_threshold_min:
-            gesture = self._debounce("LEFT_CLICK")
-        elif middle_ring_dist < self.pinch_threshold_min:
-            gesture = self._debounce("RIGHT_CLICK")
-        elif thumb_index_dist < self.pinch_threshold_min:
-            gesture = self._debounce("DRAG_MOVE")
+        if self.drag_state == "RELEASED":
+            if is_drag_pinch:
+                # User just pinched, start timer for drag
+                self.drag_state = "HELD"
+                self.drag_start_time = current_time_ms
         
+        elif self.drag_state == "HELD":
+            if not is_drag_pinch:
+                # User released before drag hold time. This might be a Zoom.
+                self.drag_state = "RELEASED"
+                if self.last_landmarks is not None:
+                    zoom_delta = thumb_index_dist - self.last_zoom_dist
+                    if abs(zoom_delta) > self.zoom_delta and self._is_ready("ZOOM", self.zoom_debounce_ms):
+                        # Pinching closer = Zoom In
+                        gesture = "ZOOM_IN" if zoom_delta < 0 else "ZOOM_OUT"
+                self.last_zoom_dist = thumb_index_dist
+                
+            elif (current_time_ms - self.drag_start_time) > self.drag_hold_ms:
+                # Hold time elapsed, start dragging
+                self.drag_state = "DRAGGING"
+                gesture = "DRAG_START"
+        
+        elif self.drag_state == "DRAGGING":
+            if not is_drag_pinch:
+                # User released, end drag
+                self.drag_state = "RELEASED"
+                gesture = "DRAG_END"
+            else:
+                # User is still dragging
+                gesture = "DRAG_MOVE"
+
+        # 2. If not dragging, check for other click/scroll gestures
+        if self.drag_state != "DRAGGING" and gesture is None:
+            
+            # --- Middle Click (3-Finger Pinch) ---
+            if all_three_pinch:
+                if self._is_ready("MIDDLE_CLICK", self.click_debounce_ms):
+                    gesture = "MIDDLE_CLICK"
+            
+            # --- Right Click (Middle + Ring) ---
+            elif middle_ring_dist < self.pinch_thresh:
+                if self._is_ready("RIGHT_CLICK", self.click_debounce_ms):
+                    gesture = "RIGHT_CLICK"
+
+            # --- Left Click (Index + Middle) ---
+            elif index_middle_dist < self.pinch_thresh:
+                    if self._is_ready("LEFT_CLICK", self.click_debounce_ms):
+                        gesture = "LEFT_CLICK"
+            
+            # --- Scroll (Vertical 2-Finger Swipe) ---
+            else:
+                # Only check for scroll if no other pinch is active
+                if self.last_landmarks is not None:
+                    scroll_y_delta = current_scroll_y - self.last_scroll_y
+                    
+                    if abs(scroll_y_delta) > self.scroll_delta_y and self._is_ready("SCROLL", self.scroll_debounce_ms):
+                        gesture = "SCROLL_DOWN" if scroll_y_delta > 0 else "SCROLL_UP"
+                
+        # Update "last known" values for next frame's delta calculation
+        if not is_drag_pinch:
+             # Only update zoom baseline when not pinching
+            self.last_zoom_dist = thumb_index_dist
+       
+        self.last_scroll_y = current_scroll_y
         self.last_landmarks = landmarks
+        
         return gesture
-    
-    def _debounce(self, gesture: str) -> Optional[str]:
-        """Apply debouncing to gesture"""
-        current_time = time.time() * 1000
-        
-        if gesture not in self.gesture_timers:
-            self.gesture_timers[gesture] = current_time
-            return gesture
-        
-        if current_time - self.gesture_timers[gesture] > self.click_debounce_ms:
-            self.gesture_timers[gesture] = current_time
-            return gesture
-        
-        return None
