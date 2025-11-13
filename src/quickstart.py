@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 GestureGlide - Quick Start Script
-Simplified entry point for immediate testing
+Simplified entry point for immediate testing.
+This script is single-threaded.
 """
 
 import sys
@@ -10,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 # Add project to path
-project_root = Path(__file__).parent.parent # <-- Corrected path to project root
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 import cv2
@@ -20,23 +21,8 @@ from src.hand_tracker import HandTracker
 from src.cursor_controller import CursorController
 from src.gesture_detector import GestureDetector
 from src.mouse_actions import MouseActions
-from src.utils import (
-    setup_logging, get_screen_size, draw_hand_connections, draw_landmarks
-)
-
-# Helper function that was missing, created from utils
-def draw_hand_skeleton(frame: np.ndarray, landmarks: np.ndarray, config: Config) -> np.ndarray:
-    """Draws the hand skeleton and landmarks on the frame."""
-    try:
-        skeleton_color = tuple(config.visualization['skeleton_color'])
-        landmark_color = tuple(config.visualization['text_color'])
-        landmark_size = config.visualization['landmark_size']
-        
-        draw_hand_connections(frame, landmarks, color=skeleton_color)
-        draw_landmarks(frame, landmarks, color=landmark_color, radius=landmark_size)
-    except Exception as e:
-        logging.getLogger(__name__).warning(f"Failed to draw skeleton: {e}")
-    return frame
+from src.core_logic import GestureCoreLogic # <-- Import new logic class
+from src.utils import setup_logging, get_screen_size
 
 
 def main():
@@ -49,30 +35,36 @@ def main():
     # Check config file
     config_path = "config.yaml"
     if not Path(config_path).exists():
-        print("❌ config.yaml not found!")
-        print("Please copy resources/sample_config.yaml to config.yaml")
-        return
-    
+        if Path("../config.yaml").exists():
+             config_path = "../config.yaml"
+        else:
+            print("❌ config.yaml not found!")
+            print("Please ensure config.yaml is in the project root.")
+            return
+
     # Initialize
     try:
         config = Config(config_path)
-        # Use setup_logging from utils, passing config
         setup_logging(config.system.get('log_level', 'INFO'), config.system.get('log_file'))
         logger = logging.getLogger(__name__)
         
-        print("✓ Configuration loaded")
+        print(f"✓ Configuration loaded from {config_path}")
         print(f"✓ Screen size: {get_screen_size()}")
         
-        # Initialize components, passing config object
+        # Initialize components
         hand_tracker = HandTracker(config)
-
         cursor_controller = CursorController(
             screen_width=config.cursor_control['screen_width'],
             screen_height=config.cursor_control['screen_height'],
             smoothing_filter=config.cursor_control['smoothing_filter']
         )
-        gesture_detector = GestureDetector(config.gesture_detection)
+        gesture_detector = GestureDetector(config.gesture_detection) # Use Fix #1
         mouse_actions = MouseActions()
+        
+        # Initialize the core logic handler
+        core_logic = GestureCoreLogic(
+            config, hand_tracker, cursor_controller, gesture_detector, mouse_actions
+        )
         
         print("✓ All components initialized")
         print("\n📷 Starting video capture...")
@@ -88,79 +80,25 @@ def main():
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         cap.set(cv2.CAP_PROP_FPS, 30)
         
-        frame_count = 0
-        
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
             
-            frame_count += 1
+            # --- Refactored Logic ---
+            # 1. Process the frame (detect, act)
+            gesture, landmarks, cursor_pos = core_logic.process_frame(frame)
             
-            # Detect hand landmarks
-            detected_hands = hand_tracker.detect(frame)
-            
-            display_frame = frame.copy()
-            
-            # Process the first hand that meets the confidence threshold
-            hand_processed = False
-            for landmarks, handedness, confidence in detected_hands:
-            
-                if not hand_processed and confidence > config.hand_tracking['detection_confidence']:
-                    hand_processed = True # Only process one hand
-                    
-                    # Update cursor
-                    cursor_x, cursor_y = cursor_controller.update_position(landmarks)
-                    
-                    # Detect gesture
-                    gesture = gesture_detector.detect(landmarks)
-                    
-                    # Execute action
-                    if gesture is None or gesture == "CURSOR_MOVE":
-                        mouse_actions.move_cursor(cursor_x, cursor_y)
-                    elif gesture == "LEFT_CLICK":
-                        mouse_actions.left_click()
-                        print(f"🖱️  Left Click")
-                    elif gesture == "RIGHT_CLICK":
-                        mouse_actions.right_click()
-                        print(f"🖱️  Right Click")
-                    elif gesture == "MIDDLE_CLICK":
-                        mouse_actions.middle_click()
-                        print(f"🖱️  Middle Click")
-                    elif gesture == "DRAG_MOVE":
-                        mouse_actions.drag_to(cursor_x, cursor_y)
-                    # Handle new gestures from Fix #1
-                    elif gesture == "DRAG_START":
-                        mouse_actions.start_drag(cursor_x, cursor_y)
-                        print(f"🖱️  Drag Start")
-                    elif gesture == "DRAG_END":
-                        mouse_actions.end_drag()
-                        print(f"🖱️  Drag End")
-                    elif gesture == "ZOOM_IN":
-                        mouse_actions.scroll(5)
-                        print(f"🔍 Zoom In")
-                    elif gesture == "ZOOM_OUT":
-                        mouse_actions.scroll(-5)
-                        print(f"🔍 Zoom Out")
-                    
-                    # Draw hand skeleton
-                    display_frame = draw_hand_skeleton(display_frame, landmarks, config)
-                    
-                    # Draw gesture indicator
-                    if gesture and config.visualization['show_gesture_indicators']:
-                        text = f"Gesture: {gesture}"
-                        cv2.putText(display_frame, text, (10, 30),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1,
-                                tuple(config.visualization['text_color']), 2)
-                    
-                    # Draw cursor reference
-                    if config.visualization['show_cursor_position']:
-                        cv2.circle(display_frame, (cursor_x % 640, cursor_y % 480), 
-                                5, (0, 255, 0), -1)
-            
+            # 2. Draw visualizations
+            display_frame = core_logic.draw_visualizations(
+                frame.copy(), gesture, landmarks, cursor_pos
+            )
+            # --- End Refactored Logic ---
+
             # Show FPS
-            if frame_count % 30 == 0 and config.visualization['show_performance_metrics']:
-                text = f"Frame: {frame_count}"
+            if config.visualization['show_performance_metrics']:
+                 # Simple FPS calculation
+                text = f"Frame: {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}"
                 cv2.putText(display_frame, text, (10, 60),
                           cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                           tuple(config.visualization['text_color']), 1)
