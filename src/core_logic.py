@@ -55,6 +55,10 @@ class GestureCoreLogic:
             self.mouse_actions.scroll(3)
         elif gesture == "SCROLL_DOWN":
             self.mouse_actions.scroll(-3)
+        elif gesture == "SCROLL_LEFT":
+            self.mouse_actions.hscroll(-3)
+        elif gesture == "SCROLL_RIGHT":
+            self.mouse_actions.hscroll(3)
         
         if gesture:
              self.logger.debug(f"Executed gesture: {gesture}")
