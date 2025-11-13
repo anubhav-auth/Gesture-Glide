@@ -106,7 +106,9 @@ def main():
             screen_height=conf_screen_height,
             smoothing_filter=config.cursor_control['smoothing_filter']
         )
-        gesture_detector = GestureDetector(config.gesture_detection) # Use Fix #1
+        # --- END FIX ---
+        
+        gesture_detector = GestureDetector(config.gesture_detection)
         mouse_actions = MouseActions()
         
         # Initialize the core logic handler
@@ -118,47 +120,85 @@ def main():
         print("\n📷 Starting video capture...")
         print("Press ESC to exit\n")
         
-        # Capture video
-        cap = cv2.VideoCapture(0)
-        if not cap.isOpened():
-            print("❌ Failed to open webcam!")
-            return
+        # --- FIX: Use the WebcamStream class, not cv2.VideoCapture ---
+        cap = WebcamStream(src=0).start()
+        # --- END FIX ---
         
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        cap.set(cv2.CAP_PROP_FPS, 30)
+        is_paused = False
+        frame_count = 0
         
         while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
+            # Read the latest frame from the stream
+            # This now correctly returns an ndarray (frame) or None
+            frame = cap.read()
+            if frame is None:
+                continue
             
-            # --- Refactored Logic ---
-            # 1. Process the frame (detect, act)
-            gesture, landmarks, cursor_pos = core_logic.process_frame(frame)
+            # This now works, as 'frame' is an ndarray
+            frame_copy = frame.copy()
+            h, w, _ = frame_copy.shape
+
+            # --- FIX 3.2: Process logic based on pause state ---
+            if not is_paused:
+                # 1. Process the frame (detect)
+                # This now works, as 'frame' is an ndarray
+                gesture, landmarks, cursor_pos = core_logic.process_frame(frame)
+                
+                # 2. Execute actions (Fix for single-threaded mode)
+                if cursor_pos:
+                    core_logic._execute_actions(gesture, cursor_pos[0], cursor_pos[1])
+            else:
+                # If paused, stop detecting and executing
+                # We set these to None so visualization stops
+                gesture, landmarks, cursor_pos = None, None, None
+            # --- END FIX ---
             
-            # 2. Draw visualizations
+            # 3. Draw visualizations
             display_frame = core_logic.draw_visualizations(
-                frame.copy(), gesture, landmarks, cursor_pos
+                frame_copy, gesture, landmarks, cursor_pos
             )
-            # --- End Refactored Logic ---
 
             # Show FPS
             if config.visualization['show_performance_metrics']:
-                 # Simple FPS calculation
-                text = f"Frame: {int(cap.get(cv2.CAP_PROP_POS_FRAMES))}"
-                cv2.putText(display_frame, text, (10, 60),
-                          cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                          tuple(config.visualization['text_color']), 1)
+                 frame_count += 1
+                 text = f"Frame: {frame_count}"
+                 cv2.putText(display_frame, text, (10, 60),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                           tuple(config.visualization['text_color']), 1)
             
+            # --- FIX 3.2: Show "PAUSED" overlay ---
+            if is_paused:
+                text = "PAUSED (Press 'p' to resume)"
+                text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
+                text_x = (w - text_size[0]) // 2
+                text_y = (h + text_size[1]) // 2
+                
+                cv2.rectangle(display_frame, (text_x - 10, text_y - text_size[1] - 10), (text_x + text_size[0] + 10, text_y + 10), (0, 0, 0), -1)
+                cv2.putText(display_frame, text, (text_x, text_y),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            # --- END FIX ---
+
             cv2.imshow("GestureGlide - Press ESC to Exit", display_frame)
             
-            # Check for ESC key
-            if cv2.waitKey(1) & 0xFF == 27:
+            # --- FIX 3.2: Add 'p' key to toggle pause ---
+            key = cv2.waitKey(1) & 0xFF
+            
+            if key == 27: # Check for ESC key
                 print("\n✋ Exiting GestureGlide...")
                 break
+            elif key == ord('p'): # Check for pause key
+                is_paused = not is_paused
+                print(f"\nGesture control PAUSED: {is_paused}")
+            # --- END FIX ---
         
-        cap.release()
+        # --- FIX: This now works, as 'cap' is a WebcamStream object ---
+        cap.stop()
+        # --- END FIX ---
+        
+        # --- REMOVE THIS LINE ---
+        # cap.release() 
+        # --- END REMOVE ---
+
         cv2.destroyAllWindows()
         print("👋 GestureGlide stopped")
         
@@ -169,7 +209,6 @@ def main():
         return 1
     
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
