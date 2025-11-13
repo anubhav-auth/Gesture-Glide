@@ -42,11 +42,7 @@ class GestureGlideApp:
             screen_height=self.config.cursor_control.get('screen_height'),
             smoothing_filter=self.config.cursor_control.get('smoothing_filter', 'kalman')
         )
-        self.gesture_detector = GestureDetector(
-            pinch_threshold_min=self.config.gesture_detection.get('pinch_threshold_min', 2.0),
-            pinch_threshold_max=self.config.gesture_detection.get('pinch_threshold_max', 3.0),
-            click_debounce_ms=self.config.gesture_detection.get('click_debounce_ms', 100)
-        )
+        self.gesture_detector = GestureDetector(self.config.gesture_detection)
         self.mouse_actions = MouseActions()  # Takes no parameters
 
         
