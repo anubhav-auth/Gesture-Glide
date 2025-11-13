@@ -3,6 +3,10 @@
 # ============================================================================
 
 import mediapipe as mp
+import logging
+import cv2
+import numpy as np
+from typing import Tuple, Optional
 
 
 class HandTracker:
@@ -24,7 +28,7 @@ class HandTracker:
         )
         self.logger.info("HandTracker initialized")
     
-    def detect(self, frame: np.ndarray) -> Tuple:
+    def detect(self, frame: np.ndarray) -> Tuple[Optional[np.ndarray], Optional[str], float]:
         """Detect hand landmarks"""
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.hands.process(rgb_frame)

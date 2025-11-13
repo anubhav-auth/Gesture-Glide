@@ -7,17 +7,37 @@ Simplified entry point for immediate testing
 import sys
 import os
 from pathlib import Path
+import numpy as np # <-- ADDED
 
 # Add project to path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent # <-- Corrected path to project root
 sys.path.insert(0, str(project_root))
 
 import cv2
 import logging
-from src.core_modules import (
-    Config, setup_logging, HandTracker, CursorController,
-    GestureDetector, MouseActions, draw_hand_skeleton, get_screen_size
+from src.config import Config
+from src.hand_tracker import HandTracker
+from src.cursor_controller import CursorController
+from src.gesture_detector import GestureDetector
+from src.mouse_actions import MouseActions
+from src.utils import (
+    setup_logging, get_screen_size, draw_hand_connections, draw_landmarks
 )
+
+# Helper function that was missing, created from utils
+def draw_hand_skeleton(frame: np.ndarray, landmarks: np.ndarray, config: Config) -> np.ndarray:
+    """Draws the hand skeleton and landmarks on the frame."""
+    try:
+        skeleton_color = tuple(config.visualization['skeleton_color'])
+        landmark_color = tuple(config.visualization['text_color'])
+        landmark_size = config.visualization['landmark_size']
+        
+        draw_hand_connections(frame, landmarks, color=skeleton_color)
+        draw_landmarks(frame, landmarks, color=landmark_color, radius=landmark_size)
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Failed to draw skeleton: {e}")
+    return frame
+
 
 def main():
     """Quick start application"""
@@ -36,17 +56,31 @@ def main():
     # Initialize
     try:
         config = Config(config_path)
-        setup_logging(config)
+        # Use setup_logging from utils, passing config
+        setup_logging(config.system.get('log_level', 'INFO'), config.system.get('log_file'))
         logger = logging.getLogger(__name__)
         
         print("✓ Configuration loaded")
         print(f"✓ Screen size: {get_screen_size()}")
         
-        # Initialize components
-        hand_tracker = HandTracker(config)
-        cursor_controller = CursorController(config)
-        gesture_detector = GestureDetector(config)
-        mouse_actions = MouseActions(config)
+        # Initialize components, passing config object
+        hand_tracker = HandTracker(
+            detection_confidence=config.hand_tracking['detection_confidence'],
+            tracking_confidence=config.hand_tracking['tracking_confidence'],
+            model_complexity=config.hand_tracking['model_complexity'],
+            max_num_hands=config.hand_tracking['max_num_hands']
+        )
+        cursor_controller = CursorController(
+            screen_width=config.cursor_control['screen_width'],
+            screen_height=config.cursor_control['screen_height'],
+            smoothing_filter=config.cursor_control['smoothing_filter']
+        )
+        gesture_detector = GestureDetector(
+            pinch_threshold_min=config.gesture_detection['pinch_threshold_min'],
+            pinch_threshold_max=config.gesture_detection['pinch_threshold_max'],
+            click_debounce_ms=config.gesture_detection['click_debounce_ms']
+        )
+        mouse_actions = MouseActions()
         
         print("✓ All components initialized")
         print("\n📷 Starting video capture...")
