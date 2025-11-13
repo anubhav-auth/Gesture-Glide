@@ -110,45 +110,52 @@ class GestureGlideApp:
                     continue
                 
                 # Detect hand landmarks
-                landmarks, handedness, confidence = self.hand_tracker.detect(frame)
+                detected_hands = self.hand_tracker.detect(frame)
                 
-                if landmarks is not None and confidence > self.config.hand_tracking['detection_confidence']:
-                    # Update cursor position based on middle finger
-                    cursor_x, cursor_y = self.cursor_controller.update_position(landmarks)
-                    
-                    # Detect gestures
-                    gesture = self.gesture_detector.detect(landmarks)
-                    
-                    # Update cursor on screen
-                    if gesture is None or gesture == "CURSOR_MOVE":
-                        self.mouse_actions.move_cursor(cursor_x, cursor_y)
-                    
-                    # Process gesture-specific actions
-                    if gesture == "LEFT_CLICK":
-                        self.mouse_actions.left_click()
-                    elif gesture == "RIGHT_CLICK":
-                        self.mouse_actions.right_click()
-                    elif gesture == "MIDDLE_CLICK":
-                        self.mouse_actions.middle_click()
-                    elif gesture == "DRAG_START":
-                        self.mouse_actions.start_drag(cursor_x, cursor_y)
-                    elif gesture == "DRAG_MOVE":
-                        self.mouse_actions.drag_to(cursor_x, cursor_y)
-                    elif gesture == "DRAG_END":
-                        self.mouse_actions.end_drag()
-                    elif gesture == "ZOOM_IN":
-                        self.mouse_actions.scroll(5)  # Scroll up
-                    elif gesture == "ZOOM_OUT":
-                        self.mouse_actions.scroll(-5)  # Scroll down
-                    elif gesture == "SCROLL_UP":
-                        self.mouse_actions.scroll(3)
-                    elif gesture == "SCROLL_DOWN":
-                        self.mouse_actions.scroll(-3)
-                    
-                    try:
-                        self.gesture_queue.put(gesture, block=False)
-                    except queue.Full:
-                        pass
+                # Process the first hand that meets the confidence threshold
+                # (True multi-hand gestures would require more logic)
+                hand_processed = False
+                for landmarks, handedness, confidence in detected_hands:
+                
+                    if not hand_processed and confidence > self.config.hand_tracking['detection_confidence']:
+                        hand_processed = True # Only process one hand for cursor control
+
+                        # Update cursor position based on middle finger
+                        cursor_x, cursor_y = self.cursor_controller.update_position(landmarks)
+                        
+                        # Detect gestures
+                        gesture = self.gesture_detector.detect(landmarks)
+                        
+                        # Update cursor on screen
+                        if gesture is None or gesture == "CURSOR_MOVE":
+                            self.mouse_actions.move_cursor(cursor_x, cursor_y)
+                        
+                        # Process gesture-specific actions
+                        if gesture == "LEFT_CLICK":
+                            self.mouse_actions.left_click()
+                        elif gesture == "RIGHT_CLICK":
+                            self.mouse_actions.right_click()
+                        elif gesture == "MIDDLE_CLICK":
+                            self.mouse_actions.middle_click()
+                        elif gesture == "DRAG_START":
+                            self.mouse_actions.start_drag(cursor_x, cursor_y)
+                        elif gesture == "DRAG_MOVE":
+                            self.mouse_actions.drag_to(cursor_x, cursor_y)
+                        elif gesture == "DRAG_END":
+                            self.mouse_actions.end_drag()
+                        elif gesture == "ZOOM_IN":
+                            self.mouse_actions.scroll(5)  # Scroll up
+                        elif gesture == "ZOOM_OUT":
+                            self.mouse_actions.scroll(-5)  # Scroll down
+                        elif gesture == "SCROLL_UP":
+                            self.mouse_actions.scroll(3)
+                        elif gesture == "SCROLL_DOWN":
+                            self.mouse_actions.scroll(-3)
+                        
+                        try:
+                            self.gesture_queue.put(gesture, block=False)
+                        except queue.Full:
+                            pass
                 
                 self.frame_count += 1
                 
@@ -246,13 +253,54 @@ class GestureGlideApp:
             if not ret:
                 break
             
-            landmarks, _, confidence = self.hand_tracker.detect(frame)
-            if landmarks is not None and confidence > self.config.hand_tracking['detection_confidence']:
-                cursor_x, cursor_y = self.cursor_controller.update_position(landmarks)
-                gesture = self.gesture_detector.detect(landmarks)
-                
-                if gesture is None or gesture == "CURSOR_MOVE":
-                    self.mouse_actions.move_cursor(cursor_x, cursor_y)
+            # Detect hand landmarks
+            detected_hands = self.hand_tracker.detect(frame)
+            
+            # Process the first hand that meets the confidence threshold
+            hand_processed = False
+            for landmarks, handedness, confidence in detected_hands:
+            
+                if not hand_processed and confidence > self.config.hand_tracking['detection_confidence']:
+                    hand_processed = True # Only process one hand for cursor control
+
+                    # Update cursor position based on middle finger
+                    # This call is now correct: landmarks is np.ndarray
+                    cursor_x, cursor_y = self.cursor_controller.update_position(landmarks)
+                    
+                    # Detect gestures
+                    # This call is also correct: landmarks is np.ndarray
+                    gesture = self.gesture_detector.detect(landmarks)
+                    
+                    # Update cursor on screen
+                    if gesture is None or gesture == "CURSOR_MOVE":
+                        self.mouse_actions.move_cursor(cursor_x, cursor_y)
+                    
+                    # Process gesture-specific actions
+                    if gesture == "LEFT_CLICK":
+                        self.mouse_actions.left_click()
+                    elif gesture == "RIGHT_CLICK":
+                        self.mouse_actions.right_click()
+                    elif gesture == "MIDDLE_click":
+                        self.mouse_actions.middle_click()
+                    elif gesture == "DRAG_START":
+                        self.mouse_actions.start_drag(cursor_x, cursor_y)
+                    elif gesture == "DRAG_MOVE":
+                        self.mouse_actions.drag_to(cursor_x, cursor_y)
+                    elif gesture == "DRAG_END":
+                        self.mouse_actions.end_drag()
+                    elif gesture == "ZOOM_IN":
+                        self.mouse_actions.scroll(5)  # Scroll up
+                    elif gesture == "ZOOM_OUT":
+                        self.mouse_actions.scroll(-5)  # Scroll down
+                    elif gesture == "SCROLL_UP":
+                        self.mouse_actions.scroll(3)
+                    elif gesture == "SCROLL_DOWN":
+                        self.mouse_actions.scroll(-3)
+                    
+                    try:
+                        self.gesture_queue.put(gesture, block=False)
+                    except queue.Full:
+                        pass
             
             cv2.imshow("GestureGlide", frame)
             if cv2.waitKey(1) & 0xFF == 27:
