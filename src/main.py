@@ -65,7 +65,8 @@ class GestureGlideApp:
         self.process_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
         # display_queue: Holds processed (frame, gesture, landmarks) for display_thread
         self.display_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
-        
+        # action_queue: Holds (gesture, cursor_pos) for the mouse_action_thread
+        self.action_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
         # Thread control
         self.running = False
         self.threads = []
@@ -121,9 +122,18 @@ class GestureGlideApp:
                 except queue.Empty:
                     continue
                 
-                # Use core logic to process frame and execute actions
+                # Use core logic to process frame (DOES NOT execute actions)
                 gesture, landmarks, cursor_pos = self.core_logic.process_frame(frame)
                 
+                # --- NEW ACTION QUEUE LOGIC ---
+                # Put the resulting action into the mouse action queue
+                if gesture or cursor_pos:
+                    try:
+                        self.action_queue.put((gesture, cursor_pos), block=False)
+                    except queue.Full:
+                        pass # Drop action if mouse thread is lagging
+                # --- END NEW LOGIC ---
+
                 # Put the original frame + processed data into the display queue
                 try:
                     display_bundle = (frame, gesture, landmarks, cursor_pos)
@@ -135,6 +145,27 @@ class GestureGlideApp:
             self.logger.error(f"Error in process thread: {e}", exc_info=True)
         finally:
             self.logger.info("Process thread stopped")
+    
+    def mouse_action_thread(self):
+        """Executes mouse actions from the action queue"""
+        self.logger.info("Mouse action thread started")
+        
+        try:
+            while self.running:
+                try:
+                    # Get the action bundle
+                    gesture, cursor_pos = self.action_queue.get(timeout=1)
+                except queue.Empty:
+                    continue
+                
+                # Use core logic to execute the (blocking) mouse action
+                if cursor_pos:
+                    self.core_logic._execute_actions(gesture, cursor_pos[0], cursor_pos[1])
+                
+        except Exception as e:
+            self.logger.error(f"Error in mouse action thread: {e}", exc_info=True)
+        finally:
+            self.logger.info("Mouse action thread stopped")
     
     def display_thread(self):
         """Display video with overlay visualization"""
@@ -191,12 +222,17 @@ class GestureGlideApp:
             if self.config.performance['enable_multithreading']:
                 capture = threading.Thread(target=self.capture_thread, daemon=True)
                 process = threading.Thread(target=self.process_thread, daemon=True)
+                # --- ADD THIS ---
+                mouse_actions = threading.Thread(target=self.mouse_action_thread, daemon=True)
+                # --- END ADD ---
                 display = threading.Thread(target=self.display_thread) # Display must be non-daemon
                 
-                self.threads = [capture, process, display]
+                # --- UPDATE THIS LIST ---
+                self.threads = [capture, process, mouse_actions, display]
                 
                 capture.start()
                 process.start()
+                mouse_actions.start() # <-- Start the new thread
                 display.start()
                 
                 # Wait for the display thread to finish (it exits on ESC)
