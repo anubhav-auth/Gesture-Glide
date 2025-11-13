@@ -46,9 +46,16 @@ class GestureGlideApp:
         
         # Initialize components
         self.hand_tracker = HandTracker(self.config)
+        
+        # --- FIX 3.1: Handle null screen resolution ---
+        # Get values from config. They might be 'null' (None).
+        conf_screen_width = self.config.cursor_control.get('screen_width')
+        conf_screen_height = self.config.cursor_control.get('screen_height')
+
         self.cursor_controller = CursorController(
-            screen_width=self.config.cursor_control.get('screen_width'),
-            screen_height=self.config.cursor_control.get('screen_height'),
+            # Pass None to trigger auto-detection in the controller
+            screen_width=conf_screen_width, 
+            screen_height=conf_screen_height,
             smoothing_filter=self.config.cursor_control.get('smoothing_filter', 'kalman')
         )
         self.gesture_detector = GestureDetector(self.config.gesture_detection) # Use Fix #1
