@@ -86,7 +86,7 @@ class GestureCoreLogic:
                 # 2. Gesture detection uses 3D world landmarks
                 gesture = self.gesture_detector.detect(world_landmarks)
                 
-                self._execute_actions(gesture, cursor_x, cursor_y)
+                # self._execute_actions(gesture, cursor_x, cursor_y)
 
                 # Store outputs for visualization
                 gesture_out = gesture
