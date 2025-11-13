@@ -6,7 +6,12 @@ GestureGlide - Benchmark & Performance Tools
 import time
 import cv2
 import psutil
-import numpy as np
+import sys
+import logging
+
+# Setup basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class PerformanceBenchmark:
@@ -14,10 +19,10 @@ class PerformanceBenchmark:
     
     def __init__(self):
         self.metrics = {
-            "fps": 0,
-            "latency": 0,
-            "cpu_usage": 0,
-            "memory_usage": 0
+            "fps": 0.0,
+            "latency": 0.0,
+            "cpu_usage": 0.0,
+            "memory_usage": 0.0
         }
     
     def run_benchmark(self, duration_seconds: int = 60):
@@ -27,10 +32,15 @@ class PerformanceBenchmark:
         print(f"Running for {duration_seconds} seconds...\n")
         
         frame_count = 0
+        total_frame_time = 0.0
         start_time = time.time()
         process = psutil.Process()
         
         cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            logger.error("Failed to open webcam.")
+            return
+
         
         while time.time() - start_time < duration_seconds:
             ret, frame = cap.read()
@@ -40,14 +50,20 @@ class PerformanceBenchmark:
             frame_time_start = time.time()
             # Process frame (simplified)
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Simulate some processing
+            _ = self.hands.process(rgb_frame) if hasattr(self, 'hands') else None 
             frame_time = (time.time() - frame_time_start) * 1000
             
+            total_frame_time += frame_time
             frame_count += 1
             
             # Update metrics
             elapsed = time.time() - start_time
-            self.metrics["fps"] = frame_count / elapsed
-            self.metrics["latency"] = frame_time
+            if elapsed > 0:
+                self.metrics["fps"] = frame_count / elapsed
+            if frame_count > 0:
+                self.metrics["latency"] = total_frame_time / frame_count
+            
             self.metrics["cpu_usage"] = process.cpu_percent()
             self.metrics["memory_usage"] = process.memory_info().rss / 1024 / 1024
         
@@ -86,11 +102,17 @@ class PerformanceBenchmark:
 
 
 if __name__ == "__main__":
-    import sys
-    
+    # Simplified main guard
     if len(sys.argv) > 1 and sys.argv[1] == "benchmark":
         benchmark = PerformanceBenchmark()
+        # Add a mock 'hands' processor if not fully initialized
+        try:
+            import mediapipe as mp
+            benchmark.hands = mp.solutions.hands.Hands()
+        except ImportError:
+            logger.warning("mediapipe not found. Benchmark will be less accurate.")
+            benchmark.hands = None # type: ignore
+            
         benchmark.run_benchmark()
     else:
-        test = InteractiveGestureTest()
-        test.run_test()
+        print("Usage: python scripts/benchmark.py benchmark")
