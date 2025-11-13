@@ -3,6 +3,7 @@
 # ============================================================================
 
 from collections import deque
+from typing import Optional
 
 
 class KalmanFilter1D:
@@ -11,7 +12,7 @@ class KalmanFilter1D:
     def __init__(self, process_noise: float = 0.01, measurement_noise: float = 4.0):
         self.process_noise = process_noise
         self.measurement_noise = measurement_noise
-        self.value = None
+        self.value: Optional[float] = None
         self.error = 1.0
     
     def filter(self, measurement: float) -> float:
@@ -42,7 +43,7 @@ class MovingAverageFilter:
     
     def __init__(self, window_size: int = 5):
         self.window_size = window_size
-        self.values = deque(maxlen=window_size)
+        self.values: deque[float] = deque(maxlen=window_size)
     
     def filter(self, value: float) -> float:
         """Apply moving average"""
