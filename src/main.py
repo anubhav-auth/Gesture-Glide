@@ -12,31 +12,43 @@ import numpy as np
 from pathlib import Path
 
 from src.config import Config
+from src.utils import setup_logging
 from src.hand_tracker import HandTracker
 from src.cursor_controller import CursorController
 from src.gesture_detector import GestureDetector
 from src.mouse_actions import MouseActions
-from src.utils import setup_logging, get_screen_size
-
 
 class GestureGlideApp:
     """Main application class orchestrating all components"""
     
-    def __init__(self, config_path: str = "config.yaml"):
+    def __init__(self, config_path: str = "../config.yaml"):
         """Initialize GestureGlide application
         
         Args:
             config_path: Path to configuration file
         """
         self.config = Config(config_path)
-        setup_logging(self.config)
+        setup_logging(
+            log_level=self.config.system.get('log_level', 'INFO'),
+            log_file=self.config.system.get('log_file')
+        )
+
         self.logger = logging.getLogger(__name__)
         
         # Initialize components
-        self.hand_tracker = HandTracker(self.config)
-        self.cursor_controller = CursorController(self.config)
-        self.gesture_detector = GestureDetector(self.config)
-        self.mouse_actions = MouseActions(self.config)
+        self.hand_tracker = HandTracker(self.config)  # This one already handles Config objects
+        self.cursor_controller = CursorController(
+            screen_width=self.config.cursor_control.get('screen_width'),
+            screen_height=self.config.cursor_control.get('screen_height'),
+            smoothing_filter=self.config.cursor_control.get('smoothing_filter', 'kalman')
+        )
+        self.gesture_detector = GestureDetector(
+            pinch_threshold_min=self.config.gesture_detection.get('pinch_threshold_min', 2.0),
+            pinch_threshold_max=self.config.gesture_detection.get('pinch_threshold_max', 3.0),
+            click_debounce_ms=self.config.gesture_detection.get('click_debounce_ms', 100)
+        )
+        self.mouse_actions = MouseActions()  # Takes no parameters
+
         
         # Communication queues
         self.frame_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
