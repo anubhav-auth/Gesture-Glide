@@ -23,17 +23,12 @@ class GestureDetector:
         """
         self.logger = logging.getLogger(__name__)
 
-        # --- Problem: Config thresholds are in 'cm', but landmarks are 'normalized' (0.0-1.0) ---
-        # The values in config.yaml (e.g., 2.0) are too large for normalized data.
-        # We apply a scaling factor to convert "cm" to "normalized" distance.
-        # This is a rough estimate and should be tuned, or hand_tracker.py should
-        # be updated to use 'multi_hand_world_landmarks' (which are in meters).
-        # Assuming a detection box of ~40cm, 2.0cm is 2.0/40.0 = 0.05 normalized.
-        self.SCALE_FACTOR = 1.0 / 40.0  # (1.0 normalized width = ~40cm)
+        # --- FIX: Convert config 'cm' values to 'meters' to match world landmarks ---
+        CM_TO_METERS = 0.01
 
-        # Load thresholds and apply scaling
-        self.pinch_thresh = config.get('pinch_threshold_min', 2.0) * self.SCALE_FACTOR
-        self.three_finger_pinch_thresh = config.get('three_finger_pinch_min', 2.5) * self.SCALE_FACTOR
+        # Load thresholds and convert to meters
+        self.pinch_thresh = config.get('pinch_threshold_min', 2.0) * CM_TO_METERS
+        self.three_finger_pinch_thresh = config.get('three_finger_pinch_min', 2.5) * CM_TO_METERS
         
         # Load timings
         self.click_debounce_ms = config.get('click_debounce_ms', 100)
@@ -41,12 +36,12 @@ class GestureDetector:
         self.zoom_debounce_ms = config.get('zoom_debounce_ms', 50)
         self.scroll_debounce_ms = config.get('scroll_debounce_ms', 100)
 
-        # Load deltas and apply scaling
-        self.zoom_delta = config.get('zoom_distance_delta_cm', 1.5) * self.SCALE_FACTOR
+        # Load deltas and convert to meters
+        self.zoom_delta = config.get('zoom_distance_delta_cm', 1.5) * CM_TO_METERS
         
-        # 'scroll_distance_threshold_px' from config is hard to use with normalized coords.
-        # Using a sane, normalized default Y-delta to trigger scroll.
-        self.scroll_delta_y = 0.03 # ~3% of screen height move
+        # Use a real-world Y-delta (in meters) for scrolling
+        # 0.03 meters (3cm) is a reasonable default for a swipe.
+        self.scroll_delta_y = 0.03
 
         # State machine
         self.gesture_timers: dict[str, float] = {}
@@ -60,8 +55,8 @@ class GestureDetector:
         self.last_zoom_dist = 0.0
         self.last_scroll_y = 0.0
 
-        self.logger.info(f"GestureDetector initialized (Normalized Pinch Thresh: {self.pinch_thresh:.4f})")
-
+        self.logger.info(f"GestureDetector initialized (Real-world Pinch Thresh: {self.pinch_thresh:.4f}m)")
+        
     def _is_ready(self, gesture: str, debounce_ms: int) -> bool:
         """Check if debounce time has passed for a gesture"""
         current_time_ms = time.time() * 1000
