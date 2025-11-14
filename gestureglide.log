@@ -1,0 +1,277 @@
+2025-11-14 02:02:20,448 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:02:20,448 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:02:20,449 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:02:20,449 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:02:20,449 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:08:51,652 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:08:51,653 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:08:51,653 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:08:51,653 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:08:51,653 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:10:34,751 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:10:34,751 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:10:34,751 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:10:34,751 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:10:34,751 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:10:34,752 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:10:34,752 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:10:34,752 - __main__ - INFO - Capture thread started
+2025-11-14 02:10:34,752 - __main__ - INFO - Process thread started
+2025-11-14 02:10:34,753 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:10:34,753 - __main__ - INFO - Display thread started
+2025-11-14 02:12:14,960 - __main__ - INFO - Display thread stopped
+2025-11-14 02:12:14,988 - __main__ - INFO - Process thread stopped
+2025-11-14 02:12:14,988 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:12:15,805 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:12:15,805 - __main__ - INFO - GestureGlide stopped
+2025-11-14 02:15:24,145 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:15:24,146 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:15:24,146 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:15:24,146 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:15:24,146 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:15:24,146 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:15:24,146 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:15:24,147 - __main__ - INFO - Capture thread started
+2025-11-14 02:15:24,147 - __main__ - INFO - Process thread started
+2025-11-14 02:15:24,147 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:15:24,148 - __main__ - INFO - Display thread started
+2025-11-14 02:15:26,591 - __main__ - INFO - Display thread stopped
+2025-11-14 02:15:26,624 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:15:26,626 - __main__ - INFO - Process thread stopped
+2025-11-14 02:15:27,148 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:15:27,149 - __main__ - INFO - GestureGlide stopped
+2025-11-14 02:15:36,651 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:15:36,652 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:15:36,652 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:15:36,652 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:15:36,652 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:15:36,652 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:15:36,652 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:15:36,652 - __main__ - INFO - Capture thread started
+2025-11-14 02:15:36,653 - __main__ - INFO - Process thread started
+2025-11-14 02:15:36,653 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:15:36,653 - __main__ - INFO - Display thread started
+2025-11-14 02:17:26,196 - __main__ - INFO - Display thread stopped
+2025-11-14 02:17:26,225 - __main__ - INFO - Process thread stopped
+2025-11-14 02:17:26,225 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:17:26,786 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:17:26,786 - __main__ - INFO - GestureGlide stopped
+2025-11-14 02:20:17,281 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:20:17,282 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:20:17,282 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:20:17,282 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:20:17,282 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:20:17,282 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:20:17,282 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:20:17,282 - __main__ - INFO - Capture thread started
+2025-11-14 02:20:17,283 - __main__ - INFO - Process thread started
+2025-11-14 02:20:17,283 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:20:17,284 - __main__ - INFO - Display thread started
+2025-11-14 02:21:54,993 - __main__ - INFO - Display thread stopped
+2025-11-14 02:21:55,020 - __main__ - INFO - Process thread stopped
+2025-11-14 02:21:55,021 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:21:55,585 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:21:55,586 - __main__ - INFO - GestureGlide stopped
+2025-11-14 02:24:38,870 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:24:38,870 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:24:38,870 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:24:38,870 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:24:38,871 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:24:38,871 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:24:38,871 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:24:38,871 - __main__ - INFO - Capture thread started
+2025-11-14 02:24:38,871 - __main__ - INFO - Process thread started
+2025-11-14 02:24:38,872 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:24:38,872 - __main__ - INFO - Display thread started
+2025-11-14 02:25:22,959 - __main__ - INFO - Display thread stopped
+2025-11-14 02:25:22,990 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:25:22,992 - __main__ - INFO - Process thread stopped
+2025-11-14 02:25:23,215 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:25:23,216 - __main__ - INFO - GestureGlide stopped
+2025-11-14 02:25:55,712 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:25:55,712 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:25:55,713 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:25:55,713 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:25:55,713 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:25:55,713 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:25:55,713 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:25:55,713 - __main__ - INFO - Capture thread started
+2025-11-14 02:25:55,714 - __main__ - INFO - Process thread started
+2025-11-14 02:25:55,714 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:25:55,714 - __main__ - INFO - Display thread started
+2025-11-14 02:26:48,472 - __main__ - INFO - Display thread stopped
+2025-11-14 02:26:48,503 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:26:48,503 - __main__ - INFO - Process thread stopped
+2025-11-14 02:26:48,746 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:26:48,746 - __main__ - INFO - GestureGlide stopped
+2025-11-14 02:28:11,139 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:28:11,140 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:28:11,140 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:28:11,140 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:28:11,140 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0200m)
+2025-11-14 02:28:11,140 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:28:11,140 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:28:11,141 - __main__ - INFO - Capture thread started
+2025-11-14 02:28:11,141 - __main__ - INFO - Process thread started
+2025-11-14 02:28:11,141 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:28:11,141 - __main__ - INFO - Display thread started
+2025-11-14 02:33:11,511 - __main__ - INFO - Display thread stopped
+2025-11-14 02:33:11,541 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:33:11,544 - __main__ - INFO - Process thread stopped
+2025-11-14 02:33:11,571 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:33:11,571 - __main__ - INFO - GestureGlide stopped
+2025-11-14 02:33:31,993 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 02:33:31,993 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 02:33:31,994 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 02:33:31,994 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 02:33:31,994 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0300m)
+2025-11-14 02:33:31,994 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 02:33:31,994 - __main__ - INFO - Starting GestureGlide
+2025-11-14 02:33:31,994 - __main__ - INFO - Capture thread started
+2025-11-14 02:33:31,995 - __main__ - INFO - Process thread started
+2025-11-14 02:33:31,995 - __main__ - INFO - Mouse action thread started
+2025-11-14 02:33:31,995 - __main__ - INFO - Display thread started
+2025-11-14 02:34:25,889 - __main__ - INFO - Display thread stopped
+2025-11-14 02:34:25,921 - __main__ - INFO - Capture thread stopped
+2025-11-14 02:34:25,923 - __main__ - INFO - Process thread stopped
+2025-11-14 02:34:26,108 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 02:34:26,108 - __main__ - INFO - GestureGlide stopped
+2025-11-14 14:22:45,500 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 14:22:45,501 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 14:22:45,501 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 14:22:45,501 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 14:22:45,501 - src.gesture_detector - INFO - GestureDetector initialized (Real-world Pinch Thresh: 0.0300m)
+2025-11-14 14:22:45,502 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 14:22:45,502 - __main__ - INFO - Starting GestureGlide
+2025-11-14 14:22:45,502 - __main__ - INFO - Capture thread started
+2025-11-14 14:22:45,503 - __main__ - INFO - Process thread started
+2025-11-14 14:22:45,503 - __main__ - INFO - Mouse action thread started
+2025-11-14 14:22:45,504 - __main__ - INFO - Display thread started
+2025-11-14 14:23:41,651 - __main__ - INFO - Display thread stopped
+2025-11-14 14:23:41,667 - __main__ - INFO - Capture thread stopped
+2025-11-14 14:23:41,674 - __main__ - INFO - Process thread stopped
+2025-11-14 14:23:42,257 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 14:23:42,257 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:01:42,915 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:05:23,710 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:05:23,731 - src.cursorcontroller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:05:23,732 - src.cursorcontroller - INFO - CursorController initialized 3840x1080
+2025-11-14 15:05:23,732 - src.cursorcontroller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:05:23,732 - src.cursorcontroller - INFO - Mapping: Scale=3840,1080, Offset=0,0
+2025-11-14 15:05:23,732 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:05:23,732 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:05:23,732 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:05:23,733 - __main__ - INFO - Capture thread started
+2025-11-14 15:05:23,733 - __main__ - INFO - Process thread started
+2025-11-14 15:05:23,734 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:05:23,734 - __main__ - INFO - Display thread started
+2025-11-14 15:05:33,395 - __main__ - ERROR - Error in process thread: 'CursorController' object has no attribute 'update_position'
+Traceback (most recent call last):
+  File "/home/anubhav-auth/Workspace/gesture_glide/src/main.py", line 136, in process_thread
+    gesture, landmarks, cursor_pos = self.core_logic.process_frame(frame)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anubhav-auth/Workspace/gesture_glide/src/core_logic.py", line 88, in process_frame
+    cursor_x, cursor_y = self.cursor_controller.update_position(image_landmarks)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'CursorController' object has no attribute 'update_position'
+2025-11-14 15:05:33,398 - __main__ - INFO - Process thread stopped
+2025-11-14 15:10:55,248 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:10:55,264 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:10:55,264 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 15:10:55,264 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:10:55,264 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:10:55,265 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:10:55,265 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:10:55,265 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:10:55,266 - __main__ - INFO - Capture thread started
+2025-11-14 15:10:55,267 - __main__ - INFO - Process thread started
+2025-11-14 15:10:55,267 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:10:55,268 - __main__ - INFO - Display thread started
+2025-11-14 15:14:25,980 - __main__ - INFO - Display thread stopped
+2025-11-14 15:14:26,008 - __main__ - INFO - Capture thread stopped
+2025-11-14 15:14:26,017 - __main__ - INFO - Process thread stopped
+2025-11-14 15:14:26,375 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 15:14:26,375 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:25:11,669 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:25:11,689 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:25:11,690 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 15:25:11,690 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:25:11,690 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:25:11,690 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:25:11,690 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:25:11,690 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:25:11,691 - __main__ - INFO - Capture thread started
+2025-11-14 15:25:11,691 - __main__ - INFO - Process thread started
+2025-11-14 15:25:11,692 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:25:11,692 - __main__ - INFO - Display thread started
+2025-11-14 15:25:46,726 - __main__ - INFO - Display thread stopped
+2025-11-14 15:25:46,752 - __main__ - INFO - Capture thread stopped
+2025-11-14 15:25:46,757 - __main__ - INFO - Process thread stopped
+2025-11-14 15:25:47,205 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 15:25:47,205 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:25:51,736 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:25:51,754 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:25:51,755 - src.cursor_controller - INFO - CursorController initialized: 3840x1080
+2025-11-14 15:25:51,755 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:25:51,755 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:25:51,755 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:25:51,755 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:25:51,755 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:25:51,756 - __main__ - INFO - Capture thread started
+2025-11-14 15:25:51,756 - __main__ - INFO - Process thread started
+2025-11-14 15:25:51,757 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:25:51,758 - __main__ - INFO - Display thread started
+2025-11-14 15:26:11,881 - __main__ - INFO - Display thread stopped
+2025-11-14 15:26:11,908 - __main__ - INFO - Capture thread stopped
+2025-11-14 15:26:11,915 - __main__ - INFO - Process thread stopped
+2025-11-14 15:26:12,032 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 15:26:12,032 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:33:03,712 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:33:03,732 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:03,733 - src.cursor_controller - INFO - CursorController initialized: 3840x1080 (origin 0,0, offset 0,0)
+2025-11-14 15:33:03,733 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:33:03,733 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:33:03,733 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:33:03,733 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:33:03,733 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:33:03,734 - __main__ - INFO - Capture thread started
+2025-11-14 15:33:03,734 - __main__ - INFO - Process thread started
+2025-11-14 15:33:03,735 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:33:03,735 - __main__ - INFO - Display thread started
+2025-11-14 15:33:06,632 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:11,649 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:16,655 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:21,656 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:26,658 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:40,989 - __main__ - INFO - Display thread stopped
+2025-11-14 15:33:41,017 - __main__ - INFO - Capture thread stopped
+2025-11-14 15:33:41,020 - __main__ - INFO - Process thread stopped
+2025-11-14 15:33:41,098 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 15:33:41,098 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:33:45,258 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:33:45,278 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:45,278 - src.cursor_controller - INFO - CursorController initialized: 3840x1080 (origin 0,0, offset 0,0)
+2025-11-14 15:33:45,278 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:33:45,279 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:33:45,279 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:33:45,279 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:33:45,279 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:33:45,280 - __main__ - INFO - Capture thread started
+2025-11-14 15:33:45,280 - __main__ - INFO - Process thread started
+2025-11-14 15:33:45,281 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:33:45,281 - __main__ - INFO - Display thread started
+2025-11-14 15:33:47,215 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:52,236 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:33:57,235 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:02,236 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:07,239 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:12,240 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:17,243 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:22,274 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:27,278 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:32,311 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:34:38,212 - __main__ - INFO - Display thread stopped
+2025-11-14 15:34:38,236 - __main__ - INFO - Capture thread stopped
+2025-11-14 15:34:38,243 - __main__ - INFO - Process thread stopped
+2025-11-14 15:34:38,616 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 15:34:38,617 - __main__ - INFO - GestureGlide stopped

@@ -1,6 +1,3 @@
-# GestureGlide Configuration File
-# User-editable configuration for gesture control system
-
 # Hand Tracking Settings
 hand_tracking:
   # Detection and tracking confidence thresholds (0.0-1.0)
@@ -17,25 +14,33 @@ hand_tracking:
 
 # Cursor Control Settings
 cursor_control:
-  # Screen resolution (set automatically on startup, but can override)
-  screen_width: null
-  screen_height: null
-  
-  # Cursor smoothing filter type: "kalman" or "moving_average"
+  # Control mode: "relative" (mouse-like) or "absolute" (legacy)
+  control_mode: "relative"
+
+  # Base sensitivity (higher = larger pixels per same hand movement)
+  sensitivity: 10.0
+
+  # Nonlinear acceleration: gain *= (1 + acceleration * speed^accel_exponent)
+  acceleration: 1.6
+  accel_exponent: 1.4
+  max_gain: 8.0
+
+  # Precision at low speed: reduce gain below this speed for fine targeting
+  low_speed_threshold: 0.15     # normalized units per second
+  low_speed_boost: 0.5          # <1.0 tightens control near target
+
+  # Jitter handling
+  deadzone_norm: 0.006         # ignore tiny normalized deltas
+  stabilizer_enabled: true
+  stabilizer_alpha: 0.25        # EMA on deltas (lower = smoother)
+  display_refresh_seconds: 5.0
+
+  # Existing options remain respected
   smoothing_filter: "kalman"
-  
-  # Kalman filter process and measurement noise
   kalman_process_noise: 0.1
   kalman_measurement_noise: 4.0
-  
-  # Moving average window size (for moving_average filter)
   moving_average_window: 5
-  
-  # Cursor movement speed multiplier (0.5 = slower, 2.0 = faster)
   speed_multiplier: 1.0
-  
-  # Enable prediction mode (experimental, reduces perceived latency)
-  use_prediction: false
 
 # Gesture Detection Settings
 gesture_detection:
