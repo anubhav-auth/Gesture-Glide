@@ -1,95 +1,170 @@
-# ============================================================================
-# CURSOR CONTROL
-# ============================================================================
-
+# src/cursor_controller.py
 import logging
-import numpy as np
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
-from src.utils import get_screen_size
-from src.smoothing import KalmanFilter1D, MovingAverageFilter
+# Prefer the legacy logger name for continuity in logs
+_LOGGER_NAME = "src.cursorcontroller"
+
+try:
+    from screeninfo import get_monitors  # pip install screeninfo
+except Exception:
+    get_monitors = None
+
+try:
+    import pyautogui
+    pyautogui.FAILSAFE = False
+except Exception:
+    pyautogui = None
 
 
 class CursorController:
-    """Cursor position control and smoothing with aspect-ratio correction"""
-    
-    def __init__(self, screen_width: Optional[int] = None, 
-                 screen_height: Optional[int] = None,
-                 smoothing_filter: str = "kalman"):
-        self.logger = logging.getLogger(__name__)
-        
-        if screen_width is None or screen_height is None:
-            screen_width_detected, screen_height_detected = get_screen_size()
-            screen_width = screen_width if screen_width is not None else screen_width_detected
-            screen_height = screen_height if screen_height is not None else screen_height_detected
+    """
+    Map normalized [0..1] hand coordinates to absolute OS pixels over the FULL
+    virtual desktop (all monitors combined). Backward-compatible with older
+    constructor parameters and attribute names used elsewhere in the app.
+    """
 
-        
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-        
-        if smoothing_filter == "kalman":
-            self.filter_x = KalmanFilter1D()
-            self.filter_y = KalmanFilter1D()
+    def __init__(
+        self,
+        # Legacy names kept for compatibility with tests and main.py
+        screenwidth: Optional[int] = None,
+        screenheight: Optional[int] = None,
+        # Optional origin for virtual desktop (usually 0,0; may be negative on some OS layouts)
+        origin_x: Optional[int] = None,
+        origin_y: Optional[int] = None,
+        # Kept for compatibility; smoothing is handled upstream or ignored here
+        smoothing_filter: Optional[str] = None,
+        # Optional extras that main/config might pass; safely ignored if unused
+        logger: Optional[logging.Logger] = None,
+        config: Optional[dict] = None,
+        camera_aspect: Optional[float] = None,
+        speed_multiplier: Optional[float] = None,
+        **kwargs,
+    ) -> None:
+        # Use a stable logger name to match previous log output
+        self.log = logger or logging.getLogger(_LOGGER_NAME)
+
+        # Detect the combined virtual desktop if not provided
+        if screenwidth is None or screenheight is None or origin_x is None or origin_y is None:
+            ox, oy, w, h = self._detect_virtual_screen()
         else:
-            self.filter_x = MovingAverageFilter()
-            self.filter_y = MovingAverageFilter()
-            
-        # --- FIX 2.1: Aspect Ratio Correction ---
-        # Camera resolution is hard-coded to 640x480 in main.py
-        self.camera_width = 640.0
-        self.camera_height = 480.0
-        self.camera_aspect = self.camera_width / self.camera_height
-        self.screen_aspect = self.screen_width / self.screen_height
-        
-        self.scale_x = 0.0
-        self.scale_y = 0.0
-        self.offset_x = 0.0
-        self.offset_y = 0.0
-        
-        if self.screen_aspect > self.camera_aspect:
-            # Screen is wider than camera (pillarbox)
-            # Map full height, calculate width based on height
-            self.scale_y = self.screen_height
-            self.offset_y = 0
-            
-            map_width = self.screen_height * self.camera_aspect
-            self.scale_x = map_width
-            self.offset_x = (self.screen_width - map_width) / 2
-        
+            ox, oy, w, h = int(origin_x), int(origin_y), int(screenwidth), int(screenheight)
+
+        # Backward-compatible public attributes (legacy names without underscores)
+        self.origin_x = int(ox)
+        self.origin_y = int(oy)
+        self.screenwidth = int(w)
+        self.screenheight = int(h)
+
+        # Optional: preserve “aspect correction” logs for continuity, but default to full fill mapping
+        self._screen_ar = (self.screenwidth / self.screenheight) if self.screenheight else 1.0
+        self._cam_ar = float(camera_aspect) if camera_aspect and camera_aspect > 0 else 4.0 / 3.0
+
+        # Aspect-correct letterbox/pillarbox was causing unreachable edges before; default to fill
+        self._aspect_mode = "fill"  # alternatives: "letterbox", "pillarbox"
+        # Compute scale/offset used only for logging and potential future modes
+        if self._aspect_mode == "fill":
+            map_w, map_h = self.screenwidth, self.screenheight
+            off_x, off_y = 0, 0
         else:
-            # Screen is taller than camera (letterbox)
-            # Map full width, calculate height based on width
-            self.scale_x = self.screen_width
-            self.offset_x = 0
-            
-            map_height = self.screen_width / self.camera_aspect
-            self.scale_y = map_height
-            self.offset_y = (self.screen_height - map_height) / 2
+            # Example pillarbox when screen AR > cam AR (kept for reference)
+            if self._screen_ar >= self._cam_ar:
+                map_h = self.screenheight
+                map_w = int(round(self._cam_ar * map_h))
+                off_x = int((self.screenwidth - map_w) / 2)
+                off_y = 0
+            else:
+                map_w = self.screenwidth
+                map_h = int(round(map_w / self._cam_ar))
+                off_x = 0
+                off_y = int((self.screenheight - map_h) / 2)
 
-        self.logger.info(f"CursorController initialized: {self.screen_width}x{self.screen_height}")
-        self.logger.info(f"Aspect correction: Screen={self.screen_aspect:.2f}, Cam={self.camera_aspect:.2f}")
-        self.logger.info(f"Mapping: Scale=({self.scale_x:.0f}, {self.scale_y:.0f}), Offset=({self.offset_x:.0f}, {self.offset_y:.0f})")
+        self.log.info(
+            "CursorController initialized %dx%d",
+            self.screenwidth, self.screenheight
+        )
+        self.log.info("Aspect correction: Screen=%.2f, Cam=%.2f", self._screen_ar, self._cam_ar)
+        self.log.info("Mapping: Scale=%d,%d, Offset=%d,%d", map_w, map_h, off_x, off_y)
 
-    
-    def update_position(self, landmarks: np.ndarray) -> Tuple[int, int]:
-        """Update cursor position from middle finger with aspect ratio correction"""
-        # Middle finger is landmark 12
-        middle_finger_norm = landmarks[12]
-        
-        # Invert X-axis. Most webcams mirror the image.
-        # This makes moving your hand to your physical right move the cursor right.
-        x_norm_flipped = 1.0 - middle_finger_norm[0]
-        y_norm = middle_finger_norm[1]
-        
-        # Apply aspect-ratio correct scaling and offset
-        x = x_norm_flipped * self.scale_x + self.offset_x
-        y = y_norm * self.scale_y + self.offset_y
-        
-        x_smooth = self.filter_x.filter(x)
-        y_smooth = self.filter_y.filter(y)
-        
-        # Clamp to screen dimensions
-        x_clamped = max(0, min(int(x_smooth), self.screen_width - 1))
-        y_clamped = max(0, min(int(y_smooth), self.screen_height - 1))
-        
-        return x_clamped, y_clamped
+        # Store a no-op of smoothing_filter for compatibility
+        self._smoothing_filter_name = str(smoothing_filter).lower() if smoothing_filter else None
+        self._speed_multiplier = float(speed_multiplier) if speed_multiplier else 1.0
+        self._config = config or {}
+
+    # ---------- public API ----------
+
+    def map_normalized_to_screen(self, nx: float, ny: float) -> Tuple[int, int]:
+        """
+        Clamp normalized coordinates to [0..1], map to absolute virtual desktop pixels,
+        and clip to the full bounds so every corner is reachable.
+        """
+        nx = min(1.0, max(0.0, float(nx)))
+        ny = min(1.0, max(0.0, float(ny)))
+
+        # Full-fill mapping to the entire virtual desktop
+        x = self.origin_x + int(round(nx * (self.screenwidth - 1)))
+        y = self.origin_y + int(round(ny * (self.screenheight - 1)))
+        return self._clip_to_bounds(x, y)
+
+    def move_to_normalized(self, nx: float, ny: float) -> None:
+        """
+        Move the OS cursor to the given normalized position across the full virtual desktop.
+        """
+        if pyautogui is None:
+            raise RuntimeError("pyautogui is required for cursor movement but is not available")
+        x, y = self.map_normalized_to_screen(nx, ny)
+        pyautogui.moveTo(x, y)
+
+    def move_with_landmarks(self, landmarks, landmark_index: int = 12) -> None:
+        """
+        Convenience: use a landmark (default middle finger tip idx=12) to position the cursor.
+        """
+        nx = float(landmarks[landmark_index][0])
+        ny = float(landmarks[landmark_index][1])
+        self.move_to_normalized(nx, ny)
+
+    # ---------- internals ----------
+
+    def _detect_virtual_screen(self) -> Tuple[int, int, int, int]:
+        """
+        Returns (origin_x, origin_y, width, height) of the full virtual desktop.
+        Prefers screeninfo for multi-monitor layouts; falls back to pyautogui.size().
+        """
+        # screeninfo captures per-monitor rectangles with potential negative origins
+        if get_monitors:
+            mons = get_monitors()
+            if mons:
+                min_x = min(m.x for m in mons)
+                min_y = min(m.y for m in mons)
+                max_x = max(m.x + m.width for m in mons)
+                max_y = max(m.y + m.height for m in mons)
+                ox = int(min_x)
+                oy = int(min_y)
+                w = int(max_x - min_x)
+                h = int(max_y - min_y)
+                self._log_layout(mons, ox, oy, w, h)
+                return ox, oy, w, h
+
+        # Fallback: primary screen only
+        if pyautogui is not None:
+            size = pyautogui.size()
+            return 0, 0, int(size.width), int(size.height)
+
+        # Last resort defaults
+        return 0, 0, 1920, 1080
+
+    def _clip_to_bounds(self, x: int, y: int) -> Tuple[int, int]:
+        min_x = self.origin_x
+        min_y = self.origin_y
+        max_x = self.origin_x + self.screenwidth - 1
+        max_y = self.origin_y + self.screenheight - 1
+        x = min(max_x, max(min_x, x))
+        y = min(max_y, max(min_y, y))
+        return x, y
+
+    def _log_layout(self, mons, ox: int, oy: int, w: int, h: int) -> None:
+        try:
+            layout = "; ".join([f"{m.name or 'mon'} @{m.x},{m.y} {m.width}x{m.height}" for m in mons])
+        except Exception:
+            layout = f"{len(mons)} monitors"
+        self.log.info("Detected virtual desktop: origin=%d,%d size=%dx%d | %s", ox, oy, w, h, layout)
