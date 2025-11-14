@@ -49,18 +49,13 @@ class GestureGlideApp:
         # Initialize components
         self.hand_tracker = HandTracker(self.config)
         
-        # --- FIX 3.1: Handle null screen resolution ---
-        # Get values from config. They might be 'null' (None).
-        conf_screen_width = self.config.cursor_control.get('screen_width')
-        conf_screen_height = self.config.cursor_control.get('screen_height')
-
+        # NEW: Pass the config object (dict) to the constructors
         self.cursor_controller = CursorController(
-            # Pass None to trigger auto-detection in the controller
-            screen_width=conf_screen_width, 
-            screen_height=conf_screen_height,
-            smoothing_filter=self.config.cursor_control.get('smoothing_filter', 'kalman')
+            config=self.config.config 
         )
-        self.gesture_detector = GestureDetector(self.config.gesture_detection) # Use Fix #1
+        self.gesture_detector = GestureDetector(
+            config=self.config.config
+        )
         self.mouse_actions = MouseActions()
         
         # Initialize the core logic handler
@@ -70,12 +65,11 @@ class GestureGlideApp:
         )
         
         # Communication queues
-        # process_queue: Holds raw frames for the process_thread
-        self.process_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
-        # display_queue: Holds processed (frame, gesture, landmarks) for display_thread
-        self.display_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
-        # action_queue: Holds (gesture, cursor_pos) for the mouse_action_thread
-        self.action_queue = queue.Queue(maxsize=self.config.advanced['max_queue_depth'])
+        max_q_depth = self.config.advanced.get('max_queue_depth', 2)
+        self.process_queue = queue.Queue(maxsize=max_q_depth)
+        self.display_queue = queue.Queue(maxsize=max_q_depth)
+        self.action_queue = queue.Queue(maxsize=max_q_depth)
+        
         # Thread control
         self.running = False
         self.threads = []
@@ -98,12 +92,13 @@ class GestureGlideApp:
         cap.set(cv2.CAP_PROP_FPS, 30)
         
         frame_skip_counter = 0
-        frame_skip = self.config.performance['frame_skip']
+        frame_skip = self.config.performance.get('frame_skip', 1)
         
         try:
             while self.running:
                 ret, frame = cap.read()
                 if not ret:
+                    time.sleep(0.01) # Wait for camera
                     continue
                 
                 frame_skip_counter += 1
@@ -135,14 +130,12 @@ class GestureGlideApp:
                 # Use core logic to process frame (DOES NOT execute actions)
                 gesture, landmarks, cursor_pos = self.core_logic.process_frame(frame)
                 
-                # --- NEW ACTION QUEUE LOGIC ---
                 # Put the resulting action into the mouse action queue
                 if gesture or cursor_pos:
                     try:
                         self.action_queue.put((gesture, cursor_pos), block=False)
                     except queue.Full:
                         pass # Drop action if mouse thread is lagging
-                # --- END NEW LOGIC ---
 
                 # Put the original frame + processed data into the display queue
                 try:
@@ -162,11 +155,9 @@ class GestureGlideApp:
         
         try:
             while self.running:
-                # --- FIX 3.2: Check for pause state ---
                 if self.is_paused:
                     time.sleep(0.1) # Sleep to avoid busy-waiting
                     continue
-                # --- END FIX ---
                 
                 try:
                     # Get the action bundle
@@ -189,6 +180,7 @@ class GestureGlideApp:
         
         fps_counter = 0
         last_time = cv2.getTickCount()
+        fps = 0
         
         try:
             while self.running:
@@ -212,14 +204,12 @@ class GestureGlideApp:
                         fps = fps_counter
                         fps_counter = 0
                         last_time = cv2.getTickCount()
-                    else:
-                        fps = fps_counter # Show running count
                         
                     cv2.putText(display_frame, f"FPS: {fps}", 
                               (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 
                               tuple(self.config.visualization['text_color']), 1)
                 
-                # --- FIX 3.2: Show "PAUSED" overlay ---
+                # Show "PAUSED" overlay
                 if self.is_paused:
                     text = "PAUSED (Press 'p' to resume)"
                     text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
@@ -229,11 +219,9 @@ class GestureGlideApp:
                     cv2.rectangle(display_frame, (text_x - 10, text_y - text_size[1] - 10), (text_x + text_size[0] + 10, text_y + 10), (0, 0, 0), -1)
                     cv2.putText(display_frame, text, (text_x, text_y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                # --- END FIX ---
 
                 cv2.imshow("GestureGlide", display_frame)
                 
-                # --- FIX 3.2: Add 'p' key to toggle pause ---
                 key = cv2.waitKey(1) & 0xFF
                 
                 if key == 27: # Check for quit key (ESC)
@@ -241,13 +229,13 @@ class GestureGlideApp:
                 elif key == ord('p'): # Check for pause key
                     self.is_paused = not self.is_paused
                     self.logger.info(f"Gesture control PAUSED: {self.is_paused}")
-                # --- END FIX ---
                 
         except Exception as e:
             self.logger.error(f"Error in display thread: {e}", exc_info=True)
         finally:
             cv2.destroyAllWindows()
             self.logger.info("Display thread stopped")
+            self.running = False # Signal other threads to stop
             
             
     def run(self):
@@ -259,17 +247,14 @@ class GestureGlideApp:
             if self.config.performance['enable_multithreading']:
                 capture = threading.Thread(target=self.capture_thread, daemon=True)
                 process = threading.Thread(target=self.process_thread, daemon=True)
-                # --- ADD THIS ---
                 mouse_actions = threading.Thread(target=self.mouse_action_thread, daemon=True)
-                # --- END ADD ---
                 display = threading.Thread(target=self.display_thread) # Display must be non-daemon
                 
-                # --- UPDATE THIS LIST ---
                 self.threads = [capture, process, mouse_actions, display]
                 
                 capture.start()
                 process.start()
-                mouse_actions.start() # <-- Start the new thread
+                mouse_actions.start()
                 display.start()
                 
                 # Wait for the display thread to finish (it exits on ESC)
@@ -277,7 +262,6 @@ class GestureGlideApp:
                 
             else:
                 self.logger.warning("Running in single-threaded mode (use quickstart.py)")
-                # Fallback to single-threaded logic (now in quickstart)
                 self.run_single_threaded_fallback()
         
         except KeyboardInterrupt:
@@ -298,14 +282,23 @@ class GestureGlideApp:
             if not ret:
                 break
             
-            gesture, landmarks, cursor_pos = self.core_logic.process_frame(frame)
+            if not self.is_paused:
+                gesture, landmarks, cursor_pos = self.core_logic.process_frame(frame)
+                if cursor_pos:
+                    self.core_logic._execute_actions(gesture, cursor_pos[0], cursor_pos[1])
+            else:
+                gesture, landmarks, cursor_pos = None, None, None
+
             display_frame = self.core_logic.draw_visualizations(
                 frame.copy(), gesture, landmarks, cursor_pos
             )
             
             cv2.imshow("GestureGlide (Single-Threaded)", display_frame)
-            if cv2.waitKey(1) & 0xFF == 27:
+            key = cv2.waitKey(1) & 0xFF
+            if key == 27:
                 self.running = False
+            elif key == ord('p'):
+                self.is_paused = not self.is_paused
         
         cap.release()
         cv2.destroyAllWindows()
