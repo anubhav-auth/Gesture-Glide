@@ -1,176 +1,174 @@
-# ============================================================================
-# GESTURE DETECTION
-# ============================================================================
-
+# src/gesture_detector.py
 import time
+import math
 import logging
-import numpy as np
-from collections import deque
-from typing import Optional, Dict, Any
+from dataclasses import dataclass
+from typing import Dict, Optional, Sequence
 
-from src.utils import euclidean_distance
+# Landmark indices (MediaPipe Hands)
+INDEX_TIP = 8
+MIDDLE_TIP = 12
+RING_TIP = 16
 
+@dataclass
+class _PinchState:
+    is_pinched: bool = False
+    last_click_ts: float = 0.0
+    press_started_ts: float = 0.0
+    ema_baseline: Optional[float] = None  # adaptive "open" distance
+    ema_dist: Optional[float] = None      # smoothed current distance
 
 class GestureDetector:
-    """Gesture recognition state machine"""
+    """
+    Pinch detection with:
+    - EMA smoothing of distances
+    - Adaptive per-user baseline when fingers are open
+    - Hysteresis (separate in/out thresholds on the distance ratio)
+    - Time debouncing for clean edge-triggered click events
+    Emits: "LEFT_CLICK", "RIGHT_CLICK", "MIDDLE_CLICK" or None
+    """
+    def __init__(
+        self,
+        config: Optional[dict] = None,
+        logger: Optional[logging.Logger] = None,
+    ) -> None:
+        self.log = logger or logging.getLogger(__name__)
+        cfg = config or {}
 
-    def __init__(self, config: Dict[str, Any]):
-        """
-        Initialize the gesture detector with configuration.
-        
-        Args:
-            config: The 'gesture_detection' section of the config.yaml file.
-        """
-        self.logger = logging.getLogger(__name__)
+        gd = (cfg.get("gesture_detection") or {})
+        # Debounce between clicks
+        self.click_debounce_ms: int = int(gd.get("click_debounce_ms", 120))
+        # Minimum time finger distance must remain closed before we accept a pinch edge
+        self.min_press_ms: int = int(gd.get("drag_hold_threshold_ms", 60))
+        # EMA smoothing factor (lower -> more smoothing)
+        self.ema_alpha: float = float(gd.get("ema_alpha", 0.25))
+        # Hysteresis on distance ratio
+        # Pinch when ratio <= in_ratio, release when ratio >= out_ratio
+        self.in_ratio: float = float(gd.get("pinch_in_ratio", 0.35))
+        self.out_ratio: float = float(gd.get("pinch_out_ratio", 0.55))
+        # Ignore trivial closings (avoid clicks if there's still a visible gap)
+        self.min_close_ratio: float = float(gd.get("min_close_ratio", 0.25))
 
-        # --- FIX: Convert config 'cm' values to 'meters' to match world landmarks ---
-        CM_TO_METERS = 0.01
+        # Internal states per pinch pair
+        self.left = _PinchState()
+        self.right = _PinchState()
+        # Middle-click = both left and right pairs pinched at the same time
+        self.middle_last_ts: float = 0.0
+        self.middle_debounce_ms: int = int(gd.get("click_debounce_ms", 120))
 
-        # Load thresholds and convert to meters
-        self.pinch_thresh = config.get('pinch_threshold_min', 2.0) * CM_TO_METERS
-        self.three_finger_pinch_thresh = config.get('three_finger_pinch_min', 2.5) * CM_TO_METERS
-        
-        # Load timings
-        self.click_debounce_ms = config.get('click_debounce_ms', 100)
-        self.drag_hold_ms = config.get('drag_hold_threshold_ms', 200)
-        self.zoom_debounce_ms = config.get('zoom_debounce_ms', 50)
-        self.scroll_debounce_ms = config.get('scroll_debounce_ms', 100)
+        # Distance floor for baseline updates (ignore very small/noisy distances)
+        self._baseline_update_floor = 0.03
 
-        # Load deltas and convert to meters
-        self.zoom_delta = config.get('zoom_distance_delta_cm', 1.5) * CM_TO_METERS
-        
-        # Use a real-world Y-delta (in meters) for scrolling
-        # 0.03 meters (3cm) is a reasonable default for a swipe.
-        self.scroll_delta_y = 0.03
-        self.scroll_delta_x = 0.03
-
-        # State machine
-        self.gesture_timers: dict[str, float] = {}
-        self.last_landmarks: Optional[np.ndarray] = None
-        
-        # Drag state: "RELEASED" -> "HELD" (pinch down) -> "DRAGGING"
-        self.drag_state = "RELEASED" 
-        self.drag_start_time = 0.0
-        
-        # Last known distances for delta calculations
-        self.last_zoom_dist = 0.0
-        self.last_scroll_y = 0.0
-        self.last_scroll_x = 0.0
-
-        self.logger.info(f"GestureDetector initialized (Real-world Pinch Thresh: {self.pinch_thresh:.4f}m)")
-        
-    def _is_ready(self, gesture: str, debounce_ms: int) -> bool:
-        """Check if debounce time has passed for a gesture"""
-        current_time_ms = time.time() * 1000
-        last_time = self.gesture_timers.get(gesture, 0)
-        if (current_time_ms - last_time) > debounce_ms:
-            self.gesture_timers[gesture] = current_time_ms
-            return True
-        return False
-
-    def detect(self, landmarks: np.ndarray) -> Optional[str]:
-        """Detect gesture from landmarks"""
-        
-        # --- Calculate Distances ---
-        # (Landmark indices from MediaPipe)
-        thumb_tip = landmarks[4]
-        index_tip = landmarks[8]
-        middle_tip = landmarks[12]
-        ring_tip = landmarks[16]
-
-        # Distances for gestures
-        thumb_index_dist = euclidean_distance(thumb_tip, index_tip)
-        index_middle_dist = euclidean_distance(index_tip, middle_tip)
-        middle_ring_dist = euclidean_distance(middle_tip, ring_tip)
-        
-        # For 3-finger pinch, check both pairs
-        all_three_pinch = (
-            index_middle_dist < self.three_finger_pinch_thresh and
-            middle_ring_dist < self.three_finger_pinch_thresh
+        # Log one-time summary
+        self.log.info(
+            "GestureDetector initialized with EMA=%.2f, in_ratio=%.2f, out_ratio=%.2f, debounce=%dms",
+            self.ema_alpha, self.in_ratio, self.out_ratio, self.click_debounce_ms
         )
 
-        # For 2-finger scroll, get average X and Y position
-        current_scroll_y = (index_tip[1] + middle_tip[1]) / 2.0
-        current_scroll_x = (index_tip[0] + middle_tip[0]) / 2.0  # <-- ADDED
-        
-        current_time_ms = time.time() * 1000
-        gesture: Optional[str] = None
+    def detect(self, landmarks: Sequence[Sequence[float]]) -> Optional[str]:
+        """
+        landmarks: iterable of 21 points [x, y, z?] in normalized [0..1]
+        Returns one of: "LEFT_CLICK", "RIGHT_CLICK", "MIDDLE_CLICK", or None
+        """
+        now = time.perf_counter()
 
-        # --- State Machine & Gesture Logic ---
+        # Pair distances
+        d_left = self._pair_distance(landmarks, INDEX_TIP, MIDDLE_TIP)
+        d_right = self._pair_distance(landmarks, MIDDLE_TIP, RING_TIP)
 
-        # 1. Check for Drag state (Thumb + Index)
-        is_drag_pinch = thumb_index_dist < self.pinch_thresh
-        
-        if self.drag_state == "RELEASED":
-            if is_drag_pinch:
-                # User just pinched, start timer for drag
-                self.drag_state = "HELD"
-                self.drag_start_time = current_time_ms
-        
-        elif self.drag_state == "HELD":
-            if not is_drag_pinch:
-                # User released before drag hold time. This might be a Zoom.
-                self.drag_state = "RELEASED"
-                if self.last_landmarks is not None:
-                    zoom_delta = thumb_index_dist - self.last_zoom_dist
-                    if abs(zoom_delta) > self.zoom_delta and self._is_ready("ZOOM", self.zoom_debounce_ms):
-                        # Pinching closer = Zoom In
-                        gesture = "ZOOM_IN" if zoom_delta < 0 else "ZOOM_OUT"
-                self.last_zoom_dist = thumb_index_dist
-                
-            elif (current_time_ms - self.drag_start_time) > self.drag_hold_ms:
-                # Hold time elapsed, start dragging
-                self.drag_state = "DRAGGING"
-                gesture = "DRAG_START"
-        
-        elif self.drag_state == "DRAGGING":
-            if not is_drag_pinch:
-                # User released, end drag
-                self.drag_state = "RELEASED"
-                gesture = "DRAG_END"
+        # Smooth and update baselines
+        ratio_left = self._update_state_and_ratio(self.left, d_left)
+        ratio_right = self._update_state_and_ratio(self.right, d_right)
+
+        # Update pinch booleans with hysteresis
+        self._update_pinch_boolean(self.left, ratio_left)
+        self._update_pinch_boolean(self.right, ratio_right)
+
+        # Middle click: both pinched on the same edge transition
+        # Fire once per combined transition, with its own debounce
+        middle_candidate = self.left.is_pinched and self.right.is_pinched
+        if middle_candidate and (now - self.middle_last_ts) * 1000.0 >= self.middle_debounce_ms:
+            # Only treat as a middle click if both pairs are meaningfully closed
+            if (ratio_left is not None and ratio_right is not None
+                and ratio_left <= self.min_close_ratio
+                and ratio_right <= self.min_close_ratio):
+                self.middle_last_ts = now
+                # Reset per-pair click timestamps to avoid double-firing
+                self.left.last_click_ts = now
+                self.right.last_click_ts = now
+                return "MIDDLE_CLICK"
+
+        # Edge-triggered left/right clicks with time debounce
+        left_click = self._edge_click(self.left, ratio_left, now)
+        if left_click:
+            return "LEFT_CLICK"
+
+        right_click = self._edge_click(self.right, ratio_right, now)
+        if right_click:
+            return "RIGHT_CLICK"
+
+        return None
+
+    # ---------- internals ----------
+
+    @staticmethod
+    def _pair_distance(landmarks: Sequence[Sequence[float]], i: int, j: int) -> float:
+        xi, yi = landmarks[i][0], landmarks[i][1]
+        xj, yj = landmarks[j][0], landmarks[j][1]
+        dx = xi - xj
+        dy = yi - yj
+        return math.hypot(dx, dy)
+
+    def _ema(self, prev: Optional[float], value: float) -> float:
+        if prev is None:
+            return value
+        a = self.ema_alpha
+        return a * value + (1.0 - a) * prev
+
+    def _update_state_and_ratio(self, st: _PinchState, dist: float) -> Optional[float]:
+        # Smooth the raw distance
+        st.ema_dist = self._ema(st.ema_dist, dist)
+
+        # Maintain an "open-hand" baseline when clearly not pinched
+        # Only raise baseline from sufficiently large, stable distances
+        if st.ema_dist is not None:
+            if st.ema_baseline is None:
+                st.ema_baseline = max(st.ema_dist, self._baseline_update_floor)
             else:
-                # User is still dragging
-                gesture = "DRAG_MOVE"
+                # Update baseline only when not pinched and distance is larger than current baseline
+                if not st.is_pinched and st.ema_dist >= max(st.ema_baseline, self._baseline_update_floor):
+                    st.ema_baseline = self._ema(st.ema_baseline, st.ema_dist)
 
-        # 2. If not dragging, check for other click/scroll gestures
-        if self.drag_state != "DRAGGING" and gesture is None:
-            
-            # --- Middle Click (3-Finger Pinch) ---
-            if all_three_pinch:
-                if self._is_ready("MIDDLE_CLICK", self.click_debounce_ms):
-                    gesture = "MIDDLE_CLICK"
-            
-            # --- Right Click (Middle + Ring) ---
-            elif middle_ring_dist < self.pinch_thresh:
-                if self._is_ready("RIGHT_CLICK", self.click_debounce_ms):
-                    gesture = "RIGHT_CLICK"
+        # Compute distance ratio vs baseline
+        if st.ema_baseline is None or st.ema_baseline <= 1e-6:
+            return None
+        return max(0.0, min(2.0, (st.ema_dist or dist) / st.ema_baseline))
 
-            # --- Left Click (Index + Middle) ---
-            elif index_middle_dist < self.pinch_thresh:
-                    if self._is_ready("LEFT_CLICK", self.click_debounce_ms):
-                        gesture = "LEFT_CLICK"
-            
-            # --- Scroll (Vertical/Horizontal 2-Finger Swipe) ---  <-- MODIFIED BLOCK
-            else:
-                # Only check for scroll if no other pinch is active
-                if self.last_landmarks is not None:
-                    scroll_y_delta = current_scroll_y - self.last_scroll_y
-                    scroll_x_delta = current_scroll_x - self.last_scroll_x
-                    
-                    # Prioritize vertical scroll
-                    if abs(scroll_y_delta) > self.scroll_delta_y and self._is_ready("SCROLL", self.scroll_debounce_ms):
-                        gesture = "SCROLL_DOWN" if scroll_y_delta > 0 else "SCROLL_UP"
-                    # Else, check for horizontal scroll
-                    elif abs(scroll_x_delta) > self.scroll_delta_x and self._is_ready("SCROLL", self.scroll_debounce_ms):
-                        gesture = "SCROLL_RIGHT" if scroll_x_delta > 0 else "SCROLL_LEFT"
-                
-        # Update "last known" values for next frame's delta calculation
-        if not is_drag_pinch:
-             # Only update zoom baseline when not pinching
-            self.last_zoom_dist = thumb_index_dist
-       
-        self.last_scroll_y = current_scroll_y
-        self.last_scroll_x = current_scroll_x  # <-- ADDED
-        self.last_landmarks = landmarks
-        
-        return gesture
+    def _update_pinch_boolean(self, st: _PinchState, ratio: Optional[float]) -> None:
+        if ratio is None:
+            return
+        # Hysteresis thresholds
+        if st.is_pinched:
+            if ratio >= self.out_ratio:
+                st.is_pinched = False
+                st.press_started_ts = 0.0
+        else:
+            # Require ratio below both in_ratio and a stricter "visible close" guard
+            if ratio <= min(self.in_ratio, self.min_close_ratio):
+                st.is_pinched = True
+                st.press_started_ts = time.perf_counter()
+
+    def _edge_click(self, st: _PinchState, ratio: Optional[float], now: float) -> bool:
+        if ratio is None:
+            return False
+        # Rising edge: became pinched and held for min_press_ms
+        if st.is_pinched and st.press_started_ts > 0:
+            held_ms = (now - st.press_started_ts) * 1000.0
+            since_last_ms = (now - st.last_click_ts) * 1000.0
+            if held_ms >= self.min_press_ms and since_last_ms >= self.click_debounce_ms:
+                # One-shot click on edge, then block re-fire until release
+                st.last_click_ts = now
+                # Prevent multiple clicks during the same hold
+                st.press_started_ts = 0.0
+                return True
+        return False
