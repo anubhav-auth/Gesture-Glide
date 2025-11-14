@@ -275,3 +275,100 @@ AttributeError: 'CursorController' object has no attribute 'update_position'
 2025-11-14 15:34:38,243 - __main__ - INFO - Process thread stopped
 2025-11-14 15:34:38,616 - __main__ - INFO - Mouse action thread stopped
 2025-11-14 15:34:38,617 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:45:05,880 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:45:05,896 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:05,897 - src.cursor_controller - INFO - CursorController initialized: 3840x1080 (origin 0,0, offset 0,0)
+2025-11-14 15:45:05,897 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:45:05,897 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:45:05,897 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:45:05,897 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:45:05,897 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:45:05,898 - __main__ - INFO - Capture thread started
+2025-11-14 15:45:05,898 - __main__ - INFO - Process thread started
+2025-11-14 15:45:05,899 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:45:05,899 - __main__ - INFO - Display thread started
+2025-11-14 15:45:08,301 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:13,318 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:18,319 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:23,323 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:28,357 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:33,391 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:38,394 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:43,394 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:48,400 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:53,402 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:45:58,435 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:03,443 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:08,519 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:13,540 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:18,574 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:23,575 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:48,203 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:53,210 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:46:58,218 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:03,221 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:19,578 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:24,599 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:29,599 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:34,636 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:40,925 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:45,975 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:51,008 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:47:55,982 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:48:00,973 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:48:07,359 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:48:12,376 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:48:17,411 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:48:22,401 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:50:39,815 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:50:47,086 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:51:25,798 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:51:39,030 - __main__ - INFO - Display thread stopped
+2025-11-14 15:51:39,047 - __main__ - INFO - Capture thread stopped
+2025-11-14 15:51:39,054 - __main__ - INFO - Process thread stopped
+2025-11-14 15:51:39,090 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 15:51:39,090 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:51:51,306 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:51:51,324 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:51:51,324 - src.cursor_controller - INFO - CursorController initialized: 3840x1080 (origin 0,0, offset 0,0)
+2025-11-14 15:51:51,324 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:51:51,324 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:51:51,324 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:51:51,325 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:51:51,325 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:51:51,325 - __main__ - INFO - Capture thread started
+2025-11-14 15:51:51,325 - __main__ - INFO - Process thread started
+2025-11-14 15:51:51,326 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:51:51,326 - __main__ - INFO - Display thread started
+2025-11-14 15:51:54,739 - __main__ - INFO - Display thread stopped
+2025-11-14 15:51:54,766 - __main__ - INFO - Capture thread stopped
+2025-11-14 15:51:54,770 - __main__ - INFO - Process thread stopped
+2025-11-14 15:51:55,327 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 15:51:55,327 - __main__ - INFO - GestureGlide stopped
+2025-11-14 15:52:07,231 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 15:52:07,245 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 15:52:07,245 - src.cursor_controller - INFO - CursorController initialized: 3840x1080 (origin 0,0, offset 0,0)
+2025-11-14 15:52:07,246 - src.cursor_controller - INFO - Aspect correction: Screen=3.56, Cam=1.33
+2025-11-14 15:52:07,246 - src.cursor_controller - INFO - Mapping: Scale=(1440, 1080), Offset=(1200, 0)
+2025-11-14 15:52:07,246 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 15:52:07,246 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 15:52:07,246 - __main__ - INFO - Starting GestureGlide
+2025-11-14 15:52:07,246 - __main__ - INFO - Capture thread started
+2025-11-14 15:52:07,246 - __main__ - INFO - Process thread started
+2025-11-14 15:52:07,247 - __main__ - INFO - Mouse action thread started
+2025-11-14 15:52:07,247 - __main__ - INFO - Display thread started
+2025-11-14 15:52:07,948 - src.cursor_controller - INFO - Detected virtual desktop: origin=0,0 size=3840x1080 | eDP-1-0 @1920,0 1920x1080; DisplayPort-1-0 @0,0 1920x1080
+2025-11-14 16:15:01,317 - src.hand_tracker - INFO - HandTracker initialized (max_num_hands=1)
+2025-11-14 16:15:01,336 - src.cursor_controller - INFO - CursorController initialized: 3840x1080 (origin 0,0, offset 0,0)
+2025-11-14 16:15:01,337 - src.gesture_detector - INFO - GestureDetector initialized with EMA=0.25, in_ratio=0.35, out_ratio=0.55, debounce=120ms
+2025-11-14 16:15:01,337 - __main__ - INFO - GestureGlide application initialized
+2025-11-14 16:15:01,337 - __main__ - INFO - Starting GestureGlide
+2025-11-14 16:15:01,338 - __main__ - INFO - Capture thread started
+2025-11-14 16:15:01,338 - __main__ - INFO - Process thread started
+2025-11-14 16:15:01,339 - __main__ - INFO - Mouse action thread started
+2025-11-14 16:15:01,340 - __main__ - INFO - Display thread started
+2025-11-14 16:17:40,306 - __main__ - INFO - Display thread stopped
+2025-11-14 16:17:40,337 - __main__ - INFO - Capture thread stopped
+2025-11-14 16:17:40,340 - __main__ - INFO - Process thread stopped
+2025-11-14 16:17:40,965 - __main__ - INFO - Mouse action thread stopped
+2025-11-14 16:17:40,966 - __main__ - INFO - GestureGlide stopped

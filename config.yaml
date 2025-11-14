@@ -1,166 +1,102 @@
 # Hand Tracking Settings
 hand_tracking:
   # Detection and tracking confidence thresholds (0.0-1.0)
-  # Lower values increase sensitivity but may increase false positives
   detection_confidence: 0.7
   tracking_confidence: 0.7
   
   # Model complexity: 0 (lite) or 1 (full)
-  # Lite is faster but less accurate; full is more accurate but slower
   model_complexity: 0
   
-  # Maximum number of hands to detect (1 or 2)
+  # Maximum number of hands to detect (1)
   max_num_hands: 1
 
-# Cursor Control Settings
+# Cursor Control Settings (NEW - Relative Mode)
 cursor_control:
   # Control mode: "relative" (mouse-like) or "absolute" (legacy)
   control_mode: "relative"
 
   # Base sensitivity (higher = larger pixels per same hand movement)
-  sensitivity: 10.0
+  sensitivity: 2.4
 
   # Nonlinear acceleration: gain *= (1 + acceleration * speed^accel_exponent)
-  acceleration: 1.6
+  acceleration: 1.5
   accel_exponent: 1.4
   max_gain: 8.0
 
   # Precision at low speed: reduce gain below this speed for fine targeting
   low_speed_threshold: 0.15     # normalized units per second
-  low_speed_boost: 0.5          # <1.0 tightens control near target
+  low_speed_boost: 0.55         # <1.0 tightens control near target
 
   # Jitter handling
-  deadzone_norm: 0.006         # ignore tiny normalized deltas
+  deadzone_norm: 0.006          # ignore tiny normalized deltas
   stabilizer_enabled: true
   stabilizer_alpha: 0.25        # EMA on deltas (lower = smoother)
+  
+  # How often (seconds) to re-check for monitor layout changes
   display_refresh_seconds: 5.0
 
-  # Existing options remain respected
-  smoothing_filter: "kalman"
-  kalman_process_noise: 0.1
-  kalman_measurement_noise: 4.0
-  moving_average_window: 5
-  speed_multiplier: 1.0
+  # --- Legacy absolute mode options (now unused) ---
+  # smoothing_filter: "kalman"
+  # kalman_process_noise: 0.1
+  # kalman_measurement_noise: 4.0
+  # moving_average_window: 5
+  # speed_multiplier: 1.0 # Replaced by sensitivity
 
-# Gesture Detection Settings
+# Gesture Detection Settings (NEW - Adaptive/Ratio-based)
 gesture_detection:
-  # Pinch distance thresholds in centimeters
-  # These define when fingers are considered touching
-  
-  # Two-finger pinches (left click, right click, drag)
-  pinch_threshold_min: 3.0
-  pinch_threshold_max: 4.0
-  
-  # Three-finger pinch (middle click)
-  three_finger_pinch_min: 3.5
-  three_finger_pinch_max: 4.5
-  
   # Debounce timings in milliseconds
-  click_debounce_ms: 100      # Minimum time between click events
-  drag_hold_threshold_ms: 200 # Time to hold before entering drag mode
-  drag_debounce_ms: 50        # Debounce during drag
+  click_debounce_ms: 120      # Minimum time between click events
   
-  # Zoom gesture settings
-  zoom_distance_delta_cm: 1.5 # Minimum distance change to trigger zoom
-  zoom_debounce_ms: 50
+  # Minimum time finger distance must remain closed before we accept a pinch edge
+  min_press_ms: 60
   
-  # Scroll gesture settings
-  scroll_distance_threshold_px: 50    # Minimum movement to trigger scroll
-  scroll_velocity_multiplier: 1.0      # How fast to scroll (higher = faster)
-  scroll_debounce_ms: 100
+  # EMA smoothing factor for distances (lower -> more smoothing)
+  ema_alpha: 0.25
   
-  # Gesture recognition hysteresis
-  # Helps prevent flickering between pinch and not-pinched
-  use_hysteresis: true
-  hysteresis_margin: 0.5
+  # Hysteresis on distance ratio (relative to adaptive open-hand baseline)
+  # Pinch when ratio <= in_ratio, release when ratio >= out_ratio
+  pinch_in_ratio: 0.35
+  pinch_out_ratio: 0.55
+  
+  # Ignore trivial closings (avoid clicks if there's still a visible gap)
+  min_close_ratio: 0.25
+  
+  # --- Legacy absolute mode options (now unused) ---
+  # pinch_threshold_min: 3.0
+  # pinch_threshold_max: 4.0
+  # three_finger_pinch_min: 3.5
+  # three_finger_pinch_max: 4.5
+  # zoom_distance_delta_cm: 1.5
+  # scroll_distance_threshold_px: 50
 
 # Performance Settings
 performance:
-  # Video capture and processing FPS
   target_fps: 30
-  
-  # Enable GPU acceleration (requires CUDA-capable GPU)
-  use_gpu: true
-  
-  # Multi-threading: separate capture, process, display threads
   enable_multithreading: true
-  
-  # Reduce processing resolution for faster performance
-  # Set to 1.0 for full resolution, 0.5 for half resolution
-  processing_scale: 0.75
-  
-  # Frame skip: process every nth frame (1 = every frame, 2 = every other frame)
+  processing_scale: 1.0
   frame_skip: 1
-  
-  # Enable power saving mode (reduces FPS to 15, lower CPU usage)
   power_saving_mode: false
 
 # Visual Feedback Settings
 visualization:
-  # Show hand skeleton overlay
   show_hand_skeleton: true
-  
-  # Show landmark points
   show_landmarks: true
-  
-  # Show gesture indicators (current detected gestures)
   show_gesture_indicators: true
-  
-  # Show cursor position reference
   show_cursor_position: true
-  
-  # Show performance metrics (FPS, latency)
   show_performance_metrics: false
-  
-  # Overlay text color (BGR format)
-  text_color: [0, 255, 0]  # Green
-  
-  # Skeleton line color (BGR format)
-  skeleton_color: [255, 0, 0]  # Blue
-  
-  # Landmark point size (radius in pixels)
+  text_color: [0, 255, 0]
+  skeleton_color: [255, 0, 0]
   landmark_size: 4
-
-# Calibration Settings
-calibration:
-  # Calibration Settings
-# Auto-run calibration on first launch
-  auto_calibrate_on_first_launch: true
-  
-  # Calibration Settings
-# Save calibration profile
-  save_calibration: true
-  calibration_profile_path: "data/calibration_profile.json"
-  # Calibration Settings
-
-  # Calibration point count (more = more accurate but slower)
-  calibration_points: 9
 
 # System Settings
 system:
-  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
   log_level: "INFO"
-  
-  # Log file path (empty = no file logging, only console)
   log_file: "gestureglide.log"
-  
-  # Enable debug mode (more verbose logging, visual debugging)
   debug_mode: false
-  
-  # Quit key (ESC key code)
   quit_key: "esc"
 
-# Advanced Settings (not recommended to modify)
+# Advanced Settings
 advanced:
-  # Hand pose estimation backend
-  # Options: "tensorflow", "tensorflow_lite", "off"
-  pose_backend: "tensorflow_lite"
-  
-  # Maximum queue depth for frame processing
   max_queue_depth: 2
-  
-  # Thread pool size (0 = auto-detect number of CPU cores)
   thread_pool_size: 0
-  
-  # Enable experimental features
   experimental_features: false
