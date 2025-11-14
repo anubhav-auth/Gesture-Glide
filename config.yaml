@@ -25,7 +25,7 @@ cursor_control:
   smoothing_filter: "kalman"
   
   # Kalman filter process and measurement noise
-  kalman_process_noise: 0.01
+  kalman_process_noise: 0.1
   kalman_measurement_noise: 4.0
   
   # Moving average window size (for moving_average filter)
@@ -43,12 +43,12 @@ gesture_detection:
   # These define when fingers are considered touching
   
   # Two-finger pinches (left click, right click, drag)
-  pinch_threshold_min: 2.0
-  pinch_threshold_max: 3.0
+  pinch_threshold_min: 3.0
+  pinch_threshold_max: 4.0
   
   # Three-finger pinch (middle click)
-  three_finger_pinch_min: 2.5
-  three_finger_pinch_max: 3.5
+  three_finger_pinch_min: 3.5
+  three_finger_pinch_max: 4.5
   
   # Debounce timings in milliseconds
   click_debounce_ms: 100      # Minimum time between click events
@@ -75,14 +75,14 @@ performance:
   target_fps: 30
   
   # Enable GPU acceleration (requires CUDA-capable GPU)
-  use_gpu: false
+  use_gpu: true
   
   # Multi-threading: separate capture, process, display threads
   enable_multithreading: true
   
   # Reduce processing resolution for faster performance
   # Set to 1.0 for full resolution, 0.5 for half resolution
-  processing_scale: 1.0
+  processing_scale: 0.75
   
   # Frame skip: process every nth frame (1 = every frame, 2 = every other frame)
   frame_skip: 1
@@ -102,7 +102,7 @@ visualization:
   show_gesture_indicators: true
   
   # Show cursor position reference
-  show_cursor_position: false
+  show_cursor_position: true
   
   # Show performance metrics (FPS, latency)
   show_performance_metrics: false
@@ -118,13 +118,16 @@ visualization:
 
 # Calibration Settings
 calibration:
-  # Auto-run calibration on first launch
+  # Calibration Settings
+# Auto-run calibration on first launch
   auto_calibrate_on_first_launch: true
   
-  # Save calibration profile
+  # Calibration Settings
+# Save calibration profile
   save_calibration: true
   calibration_profile_path: "data/calibration_profile.json"
-  
+  # Calibration Settings
+
   # Calibration point count (more = more accurate but slower)
   calibration_points: 9
 
@@ -149,7 +152,7 @@ advanced:
   pose_backend: "tensorflow_lite"
   
   # Maximum queue depth for frame processing
-  max_queue_depth: 30
+  max_queue_depth: 2
   
   # Thread pool size (0 = auto-detect number of CPU cores)
   thread_pool_size: 0
